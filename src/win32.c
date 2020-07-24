@@ -2,6 +2,8 @@
 #include <windows.h>
 
 #include "language_layer.h"
+#include "opengl.c" // temp
+#include "opengl_win32.c" // temp
 
 static b32 is_running = true;
 
@@ -51,6 +53,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	UpdateWindow(window);
 
 	HDC device_context = GetDC(window);
+	HGLRC rendering_context = InitOpenGL(device_context);
+
+	DrawFirstTriangle();
 
 	while (is_running) {
 		MSG message;
@@ -58,5 +63,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			TranslateMessage(&message);
 			DispatchMessage(&message);
 		}
+
+		glClearColor(0.2f, 0.8f, 0.2f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0);
+
+		SwapBuffers(device_context);
+		//wglSwapLayerBuffers(device_context, WGL_SWAP_MAIN_PLANE);
 	}
 }
