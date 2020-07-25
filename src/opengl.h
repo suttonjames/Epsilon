@@ -30,6 +30,7 @@ extern PFNGLSHADERSOURCEPROC glShaderSource;
 extern PFNGLUSEPROGRAMPROC glUseProgram;
 extern PFNGLVERTEXATTRIBPOINTERPROC glVertexAttribPointer;
 
-static void DrawFirstTriangle();
+static HGLRC init_opengl(HDC device_context);
+static void draw_first_triangle();
 
 #endif /* OPENGL_H */ 

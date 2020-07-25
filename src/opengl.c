@@ -1,4 +1,5 @@
 #include "opengl.h"
+#include "opengl_win32.c"
 
 PFNGLATTACHSHADERPROC glAttachShader;
 PFNGLBINDBUFFERPROC glBindBuffer;
@@ -25,7 +26,7 @@ PFNGLSHADERSOURCEPROC glShaderSource;
 PFNGLUSEPROGRAMPROC glUseProgram;
 PFNGLVERTEXATTRIBPOINTERPROC glVertexAttribPointer;
 
-static void DrawFirstTriangle()
+static void draw_first_triangle()
 {
 	// Shaders
 	const GLchar *vertex_source = 

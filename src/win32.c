@@ -1,11 +1,77 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#include <assert.h>
 
 #include "language_layer.h"
-#include "opengl.c" // temp
-#include "opengl_win32.c" // temp
 
 static b32 is_running = true;
+
+#define INIT_GAME(name) void name(HDC device_context)
+typedef INIT_GAME(InitGame);
+
+#define UPDATE_GAME(name) void name(void)
+typedef UPDATE_GAME(UpdateGame);
+
+#define SHUTDOWN_GAME(name) void name(void)
+typedef SHUTDOWN_GAME(ShutdownGame);
+
+typedef struct GameCode {
+	HMODULE dll;
+	FILETIME last_write_time;
+
+	InitGame *init_game;
+	UpdateGame *update_game;
+	ShutdownGame *shutdown_game;
+
+} GameCode;
+
+static char *dll_file_name = "c://dev//epsilon//bin//epsilon.dll"; // temp
+static char *temp_file_name = "c://dev//epsilon//bin//epsilon_temp.dll"; // temp
+
+static FILETIME win32_get_last_write_to_dll()
+{
+	FILETIME last_write_time = { 0 };
+	WIN32_FIND_DATAA find_data;
+	HANDLE file_handle = FindFirstFileA(dll_file_name, &find_data);
+	if (file_handle != INVALID_HANDLE_VALUE) {
+		last_write_time = find_data.ftLastWriteTime;
+		FindClose(file_handle);
+	}
+
+	return last_write_time;
+}
+
+static GameCode win32_load_dll()
+{
+	GameCode game_code = { 0 };
+
+	game_code.last_write_time = win32_get_last_write_to_dll();
+
+	CopyFileA(dll_file_name, temp_file_name, FALSE);
+	game_code.dll = LoadLibraryA(temp_file_name);
+	if (game_code.dll) {
+		game_code.init_game = (InitGame *)GetProcAddress(game_code.dll, "init_game");
+		game_code.update_game = (UpdateGame *)GetProcAddress(game_code.dll, "update_game");
+		game_code.shutdown_game = (ShutdownGame *)GetProcAddress(game_code.dll, "shutdown_game");
+	} else {
+		game_code.init_game = 0;
+		game_code.update_game = 0;
+		game_code.shutdown_game = 0;
+	}
+
+	return game_code;
+}
+
+static void win32_unload_dll(GameCode *game_code)
+{
+	if (game_code->dll) {
+		FreeLibrary(game_code->dll);
+		game_code->dll = 0;
+	}
+	game_code->init_game = 0;
+	game_code->update_game = 0;
+	game_code->shutdown_game = 0;
+}
 
 LRESULT CALLBACK WindowProc(HWND window, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -53,9 +119,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	UpdateWindow(window);
 
 	HDC device_context = GetDC(window);
-	HGLRC rendering_context = InitOpenGL(device_context);
 
-	DrawFirstTriangle();
+	GameCode game_code = win32_load_dll();
+
+	game_code.init_game(device_context);
 
 	while (is_running) {
 		MSG message;
@@ -64,12 +131,17 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			DispatchMessage(&message);
 		}
 
-		glClearColor(0.2f, 0.8f, 0.2f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		FILETIME dll_write_time = win32_get_last_write_to_dll();
+		
+		if (CompareFileTime(&dll_write_time, &game_code.last_write_time) != 0) {
+			win32_unload_dll(&game_code);
+			game_code = win32_load_dll();
+			game_code.init_game(device_context);
+		}
 
-		glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0);
-
-		SwapBuffers(device_context);
-		//wglSwapLayerBuffers(device_context, WGL_SWAP_MAIN_PLANE);
+		game_code.update_game();
 	}
+
+	game_code.shutdown_game();
+	return 0;
 }

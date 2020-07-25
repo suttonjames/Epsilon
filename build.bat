@@ -17,6 +17,7 @@ set complierflags=%complierflags% -nologo -fp:fast -fp:except- -Gm- -GR- -EHa- -
 set complierflags=%complierflags% -wd4189 -wd4505 -wd4127 -wd4204 -wd4221 -FC -GS- -Gs9999999 %mode%
 set linkflags=-incremental:no -opt:ref "kernel32.lib" "user32.lib" "gdi32.lib" "opengl32.lib"
 
+call cl %complierflags% -Feepsilon "..\src\epsilon.c" -LD /link %linkflags% -PDB:epsilon_%random%.pdb -EXPORT:init_game -EXPORT:update_game -EXPORT:shutdown_game
 call cl %complierflags% -Feepsilon "..\src\win32.c" /link %linkflags%
 
 del *.obj

@@ -5,7 +5,7 @@ PFNWGLCREATECONTEXTATTRIBSARBPROC wglCreateContextAttribsARB;
 PFNWGLMAKECONTEXTCURRENTARBPROC wglMakeContextCurrentARB;
 PFNWGLSWAPINTERVALEXTPROC wglSwapIntervalEXT;
 
-static void Win32LoadOpenGLFunctions()
+static void win32_load_opengl_functions()
 {
 #define GLProc(name, proc) name = (PFN##proc##PROC)wglGetProcAddress(#name);
 	GLProc(glAttachShader, GLATTACHSHADER);
@@ -34,7 +34,7 @@ static void Win32LoadOpenGLFunctions()
 	GLProc(glVertexAttribPointer, GLVERTEXATTRIBPOINTER);
 }
 
-HGLRC InitOpenGL(HDC device_context)
+HGLRC init_opengl(HDC device_context)
 {
 	//pfd for dummy context
 	PIXELFORMATDESCRIPTOR pfd = {0};
@@ -91,7 +91,7 @@ HGLRC InitOpenGL(HDC device_context)
 	wglMakeCurrent(device_context, render_context);
 	wglSwapIntervalEXT(1);
 
-	Win32LoadOpenGLFunctions();
+	win32_load_opengl_functions();
 
 	return render_context;
 }
