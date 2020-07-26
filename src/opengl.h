@@ -33,4 +33,11 @@ extern PFNGLVERTEXATTRIBPOINTERPROC glVertexAttribPointer;
 static HGLRC init_opengl(HDC device_context);
 static void draw_first_triangle();
 
-#endif /* OPENGL_H */ 
+typedef struct Shader {
+	GLuint id;
+} Shader;
+
+Shader *load_shader(const char *vertex_source, const char *fragment_source);
+void free_shader(Shader *shader);
+
+#endif /* OPENGL_H */

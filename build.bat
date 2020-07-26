@@ -7,6 +7,10 @@ if not exist bin mkdir bin
 
 pushd bin
 
+del *.exe
+del *.pdb
+del *.dll
+
 set debug=/Zi
 set release=/O2 /Zi
 set mode=%debug%
@@ -21,5 +25,7 @@ call cl %complierflags% -Feepsilon "..\src\epsilon.c" -LD /link %linkflags% -PDB
 call cl %complierflags% -Feepsilon "..\src\win32.c" /link %linkflags%
 
 del *.obj
+del *.exp
+
 
 popd

@@ -26,10 +26,52 @@ PFNGLSHADERSOURCEPROC glShaderSource;
 PFNGLUSEPROGRAMPROC glUseProgram;
 PFNGLVERTEXATTRIBPOINTERPROC glVertexAttribPointer;
 
+Shader *load_shader(const char *vertex_source, const char *fragment_source)
+{
+	GLuint vertex_shader = glCreateShader(GL_VERTEX_SHADER);
+	glShaderSource(vertex_shader, 1, &vertex_source, NULL);
+	glCompileShader(vertex_shader);
+
+	GLuint fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
+	glShaderSource(fragment_shader, 1, &fragment_source, NULL);
+	glCompileShader(fragment_shader);
+
+	GLuint program = glCreateProgram();
+	glAttachShader(program, vertex_shader);
+	glAttachShader(program, fragment_shader);
+	glLinkProgram(program);
+
+	GLint success;
+	GLchar info_log[512];
+	glGetProgramiv(program, GL_LINK_STATUS, &success);
+	if (!success) {
+		glGetShaderInfoLog(vertex_shader, 512, NULL, info_log);
+		glGetShaderInfoLog(fragment_shader, 512, NULL, info_log);
+		glGetProgramInfoLog(program, 512, NULL, info_log);
+		// log errors
+	}
+
+	glUseProgram(program);
+	glDetachShader(program, vertex_shader);
+	glDetachShader(program, fragment_shader);
+	glDeleteShader(vertex_shader);
+	glDeleteShader(fragment_shader);
+
+	Shader *shader = (Shader *)malloc(sizeof(Shader));
+	shader->id = program;
+
+	return shader;
+}
+
+void free_shader(Shader *shader)
+{
+	free(shader);
+}
+
 static void draw_first_triangle()
 {
 	// Shaders
-	const GLchar *vertex_source = 
+	const GLchar *vertex_source =
 		"#version 330 core\n\
 		layout(location = 0) in vec3 a_Position;\n\
 		void main()\n\
@@ -45,47 +87,7 @@ static void draw_first_triangle()
 			colour = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n\
 		}";
 
-	GLint  success;
-	GLchar info_log[512];
-
-	GLuint vertex_shader;
-	vertex_shader = glCreateShader(GL_VERTEX_SHADER);
-	glShaderSource(vertex_shader, 1, &vertex_source, NULL);
-	glCompileShader(vertex_shader);
-	glGetShaderiv(vertex_shader, GL_COMPILE_STATUS, &success);
-	if (!success)
-	{
-		glGetShaderInfoLog(vertex_shader, 512, NULL, info_log);
-		//error
-	}
-
-	GLuint fragment_shader;
-	fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
-	glShaderSource(fragment_shader, 1, &fragment_source, NULL);
-	glCompileShader(fragment_shader);
-	glGetShaderiv(fragment_shader, GL_COMPILE_STATUS, &success);
-	if (!success)
-	{
-		glGetShaderInfoLog(fragment_shader, 512, NULL, info_log);
-		//error
-	}
-
-	GLuint program;
-	program = glCreateProgram();
-	glAttachShader(program, vertex_shader);
-	glAttachShader(program, fragment_shader);
-	glLinkProgram(program);
-	glGetProgramiv(program, GL_LINK_STATUS, &success);
-	if (!success) {
-		glGetProgramInfoLog(program, 512, NULL, info_log);
-		//error
-	}
-
-	glUseProgram(program);
-	glDetachShader(program, vertex_shader);
-	glDetachShader(program, fragment_shader);
-	glDeleteShader(vertex_shader);
-	glDeleteShader(fragment_shader);
+	load_shader(vertex_source, fragment_source);
 
 	// Vertex Array
 	GLuint vertex_array;
@@ -115,3 +117,4 @@ static void draw_first_triangle()
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 }
+

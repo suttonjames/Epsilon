@@ -4,12 +4,12 @@
 
 #include "language_layer.h"
 
-static b32 is_running = true;
+static b32 is_running;
 
 #define INIT_GAME(name) void name(HDC device_context)
 typedef INIT_GAME(InitGame);
 
-#define UPDATE_GAME(name) void name(void)
+#define UPDATE_GAME(name) void name(HDC device_context)
 typedef UPDATE_GAME(UpdateGame);
 
 #define SHUTDOWN_GAME(name) void name(void)
@@ -25,8 +25,8 @@ typedef struct GameCode {
 
 } GameCode;
 
-static char *dll_file_name = "c://dev//epsilon//bin//epsilon.dll"; // temp
-static char *temp_file_name = "c://dev//epsilon//bin//epsilon_temp.dll"; // temp
+static char *dll_file_name = "c:/dev/epsilon/bin/epsilon.dll"; // temp
+static char *temp_file_name = "c:/dev/epsilon/bin/epsilon_temp.dll"; // temp
 
 static FILETIME win32_get_last_write_to_dll()
 {
@@ -73,31 +73,32 @@ static void win32_unload_dll(GameCode *game_code)
 	game_code->shutdown_game = 0;
 }
 
-LRESULT CALLBACK WindowProc(HWND window, UINT message, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK window_proc(HWND window, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	LRESULT result = -1;
 
 	switch (message) {
-	case WM_CLOSE:
-	case WM_DESTROY:
-	case WM_QUIT:
-	{
-		is_running = false;
-		PostQuitMessage(0);
-	} break;
-
-	default:
-		result = DefWindowProc(window, message, wParam, lParam);
+		case WM_CLOSE:
+		case WM_DESTROY:
+		case WM_QUIT:
+			is_running = false;
+			PostQuitMessage(0);
+			break;
+		default:
+			result = DefWindowProc(window, message, wParam, lParam);
 	}
+
 	return result;
 }
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd)
 {
+	is_running = true;
+
 	WNDCLASSA window_class = { 0 };
 
 	window_class.style = CS_HREDRAW | CS_OWNDC | CS_VREDRAW;
-	window_class.lpfnWndProc = WindowProc;
+	window_class.lpfnWndProc = window_proc;
 	window_class.hInstance = hInstance;
 	window_class.lpszClassName = "Win32Window";
 
@@ -106,7 +107,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	HWND window = CreateWindowExA(
 		0,
 		window_class.lpszClassName,
-		"Engine",
+		"Epsilon Engine",
 		WS_OVERLAPPEDWINDOW | WS_VISIBLE,
 		CW_USEDEFAULT, CW_USEDEFAULT,
 		CW_USEDEFAULT, CW_USEDEFAULT,
@@ -132,14 +133,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		}
 
 		FILETIME dll_write_time = win32_get_last_write_to_dll();
-		
+
 		if (CompareFileTime(&dll_write_time, &game_code.last_write_time) != 0) {
 			win32_unload_dll(&game_code);
 			game_code = win32_load_dll();
-			game_code.init_game(device_context);
 		}
 
-		game_code.update_game();
+		game_code.update_game(device_context);
 	}
 
 	game_code.shutdown_game();
