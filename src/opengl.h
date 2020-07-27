@@ -37,7 +37,12 @@ typedef struct Shader {
     GLuint id;
 } Shader;
 
+typedef struct Texture {
+    GLuint id;
+} Texture;
+
 Shader *load_shader(MemoryArena *arena, const char *vertex_source, const char *fragment_source);
-void free_shader(Shader *shader);
+
+Texture *load_texture(MemoryArena *arena, const char *file_name);
 
 #endif /* OPENGL_H */

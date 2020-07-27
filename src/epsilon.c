@@ -25,21 +25,28 @@ __declspec(dllexport) void init_game(HDC device_context, Platform *platform)
     const GLchar *vertex_source =
         "#version 330 core\n\
         layout(location = 0) in vec3 a_Position;\n\
+        layout(location = 1) in vec2 a_TexCoord;\n\
+        out vec2 v_TexCoord;\n\
         void main()\n\
         {\n\
             gl_Position = vec4(a_Position, 1.0);\n\
+            v_TexCoord = a_TexCoord;\n\
         }";
 
     const GLchar *fragment_source =
         "#version 330 core\n\
+        in vec2 v_TexCoord;\n\
+        uniform sampler2D u_Texture;\n\
         out vec4 colour;\n\
         void main()\n\
         {\n\
-            colour = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n\
+            //colour = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n\
+            colour = texture(u_Texture, v_TexCoord);\n\
         }";
 
     game_state->mesh = load_mesh(&game_state->assets, "c:/dev/epsilon/assets/helmet.obj"); // temp
     game_state->mesh->shader = load_shader(&game_state->assets, vertex_source, fragment_source);
+    game_state->mesh->texture = load_texture(&game_state->assets, "c:/dev/epsilon/assets/helmet_basecolor.tga");
 }
 
 __declspec(dllexport) void update_game(HDC device_context, Platform *platform)
@@ -52,7 +59,23 @@ __declspec(dllexport) void update_game(HDC device_context, Platform *platform)
     glClearColor(0.1f, 0.2f, 0.2f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    //cull faces and depth testing 
+    glEnable(GL_FRAMEBUFFER_SRGB);
+    glDepthMask(GL_TRUE);
+    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+    glDepthFunc(GL_LEQUAL);
+    glEnable(GL_DEPTH_TEST);
+    glClearDepth(1.f);
+
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
+    glFrontFace(GL_CCW);
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
     glBindVertexArray(game_state->mesh->vertex_array);
+    glBindTexture(GL_TEXTURE_2D, game_state->mesh->texture->id);
     glUseProgram(game_state->mesh->shader->id);
     glDrawElements(GL_TRIANGLES, game_state->mesh->num_indices, GL_UNSIGNED_INT, 0);
 

@@ -72,7 +72,7 @@ Mesh *load_mesh(MemoryArena *arena, const char *file_name)
     Mesh *mesh = push_struct(arena, Mesh);
     mesh->num_vertices = sb_count(position_index);
     mesh->num_indices = 3 * mesh->num_vertices;
-    
+
     Vertex *vertices = NULL;
     u32 *indices = NULL;
     u32 offset = 0;
@@ -87,7 +87,7 @@ Mesh *load_mesh(MemoryArena *arena, const char *file_name)
         sb_push(indices, 2 + offset);
         offset += 3;
     }
-    
+
     mesh->vertices = push_array(arena, mesh->num_vertices, Vertex);
     mesh->indices = push_array(arena, mesh->num_indices, u32);
 
@@ -100,7 +100,7 @@ Mesh *load_mesh(MemoryArena *arena, const char *file_name)
     glGenBuffers(1, &mesh->vertex_buffer);
     glBindBuffer(GL_ARRAY_BUFFER, mesh->vertex_buffer);
     glBufferData(GL_ARRAY_BUFFER, mesh->num_vertices * sizeof(Vertex), &mesh->vertices[0], GL_STATIC_DRAW);
-    
+
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), 0);
 
@@ -109,25 +109,21 @@ Mesh *load_mesh(MemoryArena *arena, const char *file_name)
 
     glEnableVertexAttribArray(2);
     glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(5 * sizeof(f32)));
-    
+
     glGenBuffers(1, &mesh->index_buffer);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->index_buffer);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, mesh->num_indices * sizeof(u32), &mesh->indices[0], GL_STATIC_DRAW);
-    
+
     sb_free(positions);
     sb_free(texcoords);
     sb_free(normals);
     sb_free(position_index);
     sb_free(texcoord_index);
     sb_free(normal_index);
-    
+
     sb_free(vertices);
     sb_free(indices);
 
     return mesh;
 }
 
-void free_mesh(Mesh *mesh)
-{
-    free(mesh);
-}

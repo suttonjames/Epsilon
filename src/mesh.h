@@ -18,11 +18,11 @@ typedef struct Mesh {
     u32 num_indices;
 
     Shader *shader;
+    Texture *texture;
 
     GLuint vertex_array, vertex_buffer, index_buffer;
 } Mesh;
 
 Mesh *load_mesh(MemoryArena *arena, const char *file_name);
-void free_mesh(Mesh *mesh);
 
 #endif /* MESH_H */

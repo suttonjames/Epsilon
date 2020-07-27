@@ -48,6 +48,7 @@ Shader *load_shader(MemoryArena *arena, const char *vertex_source, const char *f
         glGetShaderInfoLog(vertex_shader, 512, NULL, info_log);
         glGetShaderInfoLog(fragment_shader, 512, NULL, info_log);
         glGetProgramInfoLog(program, 512, NULL, info_log);
+        assert(false);
         // log errors
     }
 
@@ -63,9 +64,34 @@ Shader *load_shader(MemoryArena *arena, const char *vertex_source, const char *f
     return shader;
 }
 
-void free_shader(Shader *shader)
+Texture *load_texture(MemoryArena *arena, const char *file_name)
 {
-    free(shader);
+    GLuint id;
+    glGenTextures(1, &id);
+    glBindTexture(GL_TEXTURE_2D, id);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    s32 width, height, channels;
+    stbi_set_flip_vertically_on_load(true);
+    u8 *data = stbi_load(file_name, &width, &height, &channels, 0);
+    if (data) {
+        if (channels == 3) 
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+        else if (channels == 4) 
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+    } else {
+        assert(false);
+        // log error
+    }
+    stbi_image_free(data);
+
+    Texture *texture = push_struct(arena, Texture);
+    texture->id = id;
+
+    return texture;
 }
 
 
