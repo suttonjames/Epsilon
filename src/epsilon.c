@@ -1,16 +1,26 @@
+#include "platform.h"
+
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
-#include "language_layer.h"
+#include "memory.c"
 #include "opengl.c"
 #include "mesh.c"
 
-static HDC hdc = 0; // temp
-static Mesh *mesh; // temp hot reloading is now broken as this need to be store in permanent memory
+#include "epsilon.h"
 
-__declspec(dllexport) void init_game(HDC device_context)
+GameState *game_state;
+
+static HDC hdc = 0; // temp
+
+__declspec(dllexport) void init_game(HDC device_context, Platform *platform)
 {
-	HGLRC rendering_context = init_opengl(device_context);
+    game_state = (GameState *)platform->permanent_arena;
+    if (game_state) platform->initialised = true;
+
+    alloc_arena(&game_state->assets, platform->permanent_arena_size - sizeof(game_state), (u64 *)platform->permanent_arena + sizeof(game_state));
+
+    HGLRC rendering_context = init_opengl(device_context);
 
     const GLchar *vertex_source =
         "#version 330 core\n\
@@ -28,22 +38,26 @@ __declspec(dllexport) void init_game(HDC device_context)
             colour = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n\
         }";
 
-    mesh = load_mesh("c:/dev/epsilon/assets/helmet.obj"); // temp
-    mesh->shader = load_shader(vertex_source, fragment_source);
+    game_state->mesh = load_mesh(&game_state->assets, "c:/dev/epsilon/assets/helmet.obj"); // temp
+    game_state->mesh->shader = load_shader(&game_state->assets, vertex_source, fragment_source);
 }
 
-__declspec(dllexport) void update_game(HDC device_context)
+__declspec(dllexport) void update_game(HDC device_context, Platform *platform)
 {
+    if (!game_state) {
+        game_state = (GameState *)platform->permanent_arena;
+        win32_load_opengl_functions();
+    }
     hdc = device_context; // temp
-	glClearColor(0.7f, 0.2f, 0.2f, 1.0f);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glClearColor(0.1f, 0.2f, 0.2f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    glBindVertexArray(mesh->vertex_array);
-    glUseProgram(mesh->shader->id);
-	glDrawElements(GL_TRIANGLES, mesh->num_indices, GL_UNSIGNED_INT, 0);
+    glBindVertexArray(game_state->mesh->vertex_array);
+    glUseProgram(game_state->mesh->shader->id);
+    glDrawElements(GL_TRIANGLES, game_state->mesh->num_indices, GL_UNSIGNED_INT, 0);
 
-	SwapBuffers(hdc);
-	//wglSwapLayerBuffers(device_context, WGL_SWAP_MAIN_PLANE);
+    SwapBuffers(hdc);
+    //wglSwapLayerBuffers(device_context, WGL_SWAP_MAIN_PLANE);
 }
 
 __declspec(dllexport) void shutdown_game()

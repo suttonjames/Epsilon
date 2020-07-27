@@ -34,10 +34,10 @@ static HGLRC init_opengl(HDC device_context);
 static void draw_first_triangle();
 
 typedef struct Shader {
-	GLuint id;
+    GLuint id;
 } Shader;
 
-Shader *load_shader(const char *vertex_source, const char *fragment_source);
+Shader *load_shader(MemoryArena *arena, const char *vertex_source, const char *fragment_source);
 void free_shader(Shader *shader);
 
 #endif /* OPENGL_H */

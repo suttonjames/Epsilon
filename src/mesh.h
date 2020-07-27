@@ -22,8 +22,7 @@ typedef struct Mesh {
     GLuint vertex_array, vertex_buffer, index_buffer;
 } Mesh;
 
-Mesh *load_mesh(const char *file_name);
+Mesh *load_mesh(MemoryArena *arena, const char *file_name);
 void free_mesh(Mesh *mesh);
-
 
 #endif /* MESH_H */

@@ -17,11 +17,17 @@ typedef int16_t s16;
 typedef int32_t s32;
 typedef int64_t s64;
 
+typedef size_t usize;
+
 typedef float f32;
 typedef double f64;
 
 typedef s32 b32;
 #define true 1
 #define false 0
+
+#define kilobytes(Value) ((Value)*1024)
+#define megabytes(Value) (kilobytes(Value)*1024)
+#define gigabytes(Value) (megabytes(Value)*1024)
 
 #endif /* LANGUAGE_LAYER_H */
