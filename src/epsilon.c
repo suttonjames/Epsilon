@@ -4,6 +4,7 @@
 #include <windows.h>
 
 #include "memory.c"
+#include "maths.c"
 #include "opengl.c"
 #include "mesh.c"
 
@@ -12,6 +13,7 @@
 GameState *game_state;
 
 static HDC hdc = 0; // temp
+static f32 rotate_speed = 0.0f;
 
 __declspec(dllexport) void init_game(HDC device_context, Platform *platform)
 {
@@ -26,10 +28,11 @@ __declspec(dllexport) void init_game(HDC device_context, Platform *platform)
         "#version 330 core\n\
         layout(location = 0) in vec3 a_Position;\n\
         layout(location = 1) in vec2 a_TexCoord;\n\
+        uniform mat4 u_Transform;\n\
         out vec2 v_TexCoord;\n\
         void main()\n\
         {\n\
-            gl_Position = vec4(a_Position, 1.0);\n\
+            gl_Position = u_Transform * vec4(a_Position, 1.0);\n\
             v_TexCoord = a_TexCoord;\n\
         }";
 
@@ -55,24 +58,17 @@ __declspec(dllexport) void update_game(HDC device_context, Platform *platform)
         game_state = (GameState *)platform->permanent_arena;
         win32_load_opengl_functions();
     }
+
     hdc = device_context; // temp
     glClearColor(0.1f, 0.2f, 0.2f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    //cull faces and depth testing 
-    glEnable(GL_FRAMEBUFFER_SRGB);
-    glDepthMask(GL_TRUE);
-    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-    glDepthFunc(GL_LEQUAL);
-    glEnable(GL_DEPTH_TEST);
-    glClearDepth(1.f);
+    rotate_speed += 0.01f;
+    Matrix4x4 trans = mat4(1.0f);
+    trans = mat4_mul(trans, mat4_scale(vec3(0.5f, 0.5f, 0.5f)));
+    trans = mat4_mul(trans, mat4_rotate(rotate_speed, vec3(-1.0f, 1.0f, .0f)));
 
-    glEnable(GL_CULL_FACE);
-    glCullFace(GL_BACK);
-    glFrontFace(GL_CCW);
-
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    set_uniform_mat4(game_state->mesh->shader->id, "u_Transform", trans);
 
     glBindVertexArray(game_state->mesh->vertex_array);
     glBindTexture(GL_TEXTURE_2D, game_state->mesh->texture->id);

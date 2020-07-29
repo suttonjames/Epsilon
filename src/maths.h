@@ -30,6 +30,50 @@ inline Vector3 vec3(f32 x, f32 y, f32 z) { return (Vector3){ x, y, z }; }
 inline Vector3 vec3_add(Vector3 a, Vector3 b) { return vec3(a.x + b.x, a.y + b.y, a.z + b.z); }
 inline Vector3 vec3_sub(Vector3 a, Vector3 b) { return vec3(a.x - b.x, a.y - b.y, a.z - b.z); }
 inline Vector3 vec3_mul(Vector3 a, Vector3 b) { return vec3(a.x * b.x, a.y * b.y, a.z * b.z); }
+inline Vector3 vec3_mul_float(Vector3 a, f32 b) { return vec3(a.x * b, a.y * b, a.z * b); }
 inline Vector3 vec3_div(Vector3 a, Vector3 b) { return vec3(a.x / b.x, a.y / b.y, a.z / b.z); }
+
+inline f32 vec3_length_sq(Vector3 v) { return (v.x * v.x + v.y * v.y + v.z * v.z); }
+inline f32 vec3_length(Vector3 v) { return (f32)sqrt(vec3_length_sq(v)); }
+inline Vector3 vec3_norm(Vector3 v) { return vec3_mul_float(v, (1.0f / vec3_length(v))); }
+
+inline f32 vec3_dot(Vector3 a, Vector3 b) { return a.x * b.x + a.y * b.y + a.z * b.z; }
+inline Vector3 vec3_cross(Vector3 a, Vector3 b) {
+    return vec3(a.y * a.z - a.z * b.y,
+        a.z * b.x - a.x * b.z,
+        a.x * b.y - a.y * b.x);
+}
+
+typedef union Vector4 {
+    struct { f32 x, y, z, w; };
+    struct { f32 r, g, b, a; };
+    f32 elements[4];
+} Vector4;
+
+inline Vector4 vec4(f32 x, f32 y, f32 z, f32 w) { return (Vector4){ x, y, z, w }; }
+
+inline Vector4 vec4_add(Vector4 a, Vector4 b) { return vec4(a.x + b.x, a.y + b.y, a.z + b.z, a.w + b.w); }
+inline Vector4 vec4_sub(Vector4 a, Vector4 b) { return vec4(a.x - b.x, a.y - b.y, a.z - b.z, a.w - b.w); }
+inline Vector4 vec4_mul(Vector4 a, Vector4 b) { return vec4(a.x * b.x, a.y * b.y, a.z * b.z, a.w * b.w); }
+inline Vector4 vec4_div(Vector4 a, Vector4 b) { return vec4(a.x / b.x, a.y / b.y, a.z / b.z, a.w / b.w); }
+
+typedef union Matrix4x4 {
+    f32 elements[4][4];
+    f32 item[16];
+} Matrix4x4;
+
+inline Matrix4x4 mat4(f32 f);
+
+inline Matrix4x4 mat4_mul(Matrix4x4 a, Matrix4x4 b);
+
+inline Matrix4x4 mat4_ortho(f32 left, f32 right, f32 bottom, f32 top, f32 near, f32 far);
+inline Matrix4x4 mat4_perspective(f32 fov, f32 aspect_ratio, f32 near, f32 far);
+
+inline Matrix4x4 mat4_translate(Vector3 translation);
+inline Matrix4x4 mat4_rotate(f32 angle, Vector3 axis);
+inline Matrix4x4 mat4_scale(Vector3 scale);
+
+inline Matrix4x4 mat4_lookat(Vector3 eye, Vector3 centre, Vector3 up);
+
 
 #endif /* MATHS_H */

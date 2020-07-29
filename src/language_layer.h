@@ -29,8 +29,8 @@ typedef s32 b32;
 #define true 1
 #define false 0
 
-#define kilobytes(Value) ((Value)*1024)
-#define megabytes(Value) (kilobytes(Value)*1024)
-#define gigabytes(Value) (megabytes(Value)*1024)
+#define kilobytes(value) ((value)*1024)
+#define megabytes(value) (kilobytes(value)*1024)
+#define gigabytes(value) (megabytes(value)*1024)
 
 #endif /* LANGUAGE_LAYER_H */

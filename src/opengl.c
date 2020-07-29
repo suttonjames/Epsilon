@@ -21,8 +21,10 @@ PFNGLGETPROGRAMINFOLOGPROC glGetProgramInfoLog;
 PFNGLGETPROGRAMIVPROC glGetProgramiv;
 PFNGLGETSHADERINFOLOGPROC glGetShaderInfoLog;
 PFNGLGETSHADERIVPROC glGetShaderiv;
+PFNGLGETUNIFORMLOCATIONPROC glGetUniformLocation;
 PFNGLLINKPROGRAMPROC glLinkProgram;
 PFNGLSHADERSOURCEPROC glShaderSource;
+PFNGLUNIFORMMATRIX4FVPROC glUniformMatrix4fv;
 PFNGLUSEPROGRAMPROC glUseProgram;
 PFNGLVERTEXATTRIBPOINTERPROC glVertexAttribPointer;
 
@@ -64,6 +66,12 @@ Shader *load_shader(MemoryArena *arena, const char *vertex_source, const char *f
     return shader;
 }
 
+void set_uniform_mat4(GLuint shader_id, const char *name, Matrix4x4 m)
+{
+    GLuint location = glGetUniformLocation(shader_id, name); // temp store uniform locations when setting up shader
+    glUniformMatrix4fv(location, 1, GL_FALSE, m.item);
+}
+
 Texture *load_texture(MemoryArena *arena, const char *file_name)
 {
     GLuint id;
@@ -78,9 +86,9 @@ Texture *load_texture(MemoryArena *arena, const char *file_name)
     stbi_set_flip_vertically_on_load(true);
     u8 *data = stbi_load(file_name, &width, &height, &channels, 0);
     if (data) {
-        if (channels == 3) 
+        if (channels == 3)
             glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-        else if (channels == 4) 
+        else if (channels == 4)
             glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
     } else {
         assert(false);

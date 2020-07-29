@@ -2,7 +2,6 @@
 #define MESH_H
 
 #include "stb/stretchy_buffer.h"
-#include "maths.h"
 
 typedef struct Vertex {
     Vector3 position;

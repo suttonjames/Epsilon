@@ -28,8 +28,10 @@ static void win32_load_opengl_functions()
     GLProc(glGetProgramiv, GLGETPROGRAMIV);
     GLProc(glGetShaderInfoLog, GLGETSHADERINFOLOG);
     GLProc(glGetShaderiv, GLGETSHADERIV);
+    GLProc(glGetUniformLocation, GLGETUNIFORMLOCATION);
     GLProc(glLinkProgram, GLLINKPROGRAM);
     GLProc(glShaderSource, GLSHADERSOURCE);
+    GLProc(glUniformMatrix4fv, GLUNIFORMMATRIX4FV);
     GLProc(glUseProgram, GLUSEPROGRAM);
     GLProc(glVertexAttribPointer, GLVERTEXATTRIBPOINTER);
 }
@@ -92,6 +94,8 @@ HGLRC init_opengl(HDC device_context)
     wglSwapIntervalEXT(1);
 
     win32_load_opengl_functions();
+
+    glEnable(GL_DEPTH_TEST);
 
     return render_context;
 }

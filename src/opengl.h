@@ -25,13 +25,14 @@ extern PFNGLGETPROGRAMINFOLOGPROC glGetProgramInfoLog;
 extern PFNGLGETPROGRAMIVPROC glGetProgramiv;
 extern PFNGLGETSHADERINFOLOGPROC glGetShaderInfoLog;
 extern PFNGLGETSHADERIVPROC glGetShaderiv;
+extern PFNGLGETUNIFORMLOCATIONPROC glGetUniformLocation;
 extern PFNGLLINKPROGRAMPROC glLinkProgram;
 extern PFNGLSHADERSOURCEPROC glShaderSource;
+extern PFNGLUNIFORMMATRIX4FVPROC glUniformMatrix4fv;
 extern PFNGLUSEPROGRAMPROC glUseProgram;
 extern PFNGLVERTEXATTRIBPOINTERPROC glVertexAttribPointer;
 
 static HGLRC init_opengl(HDC device_context);
-static void draw_first_triangle();
 
 typedef struct Shader {
     GLuint id;
@@ -42,6 +43,8 @@ typedef struct Texture {
 } Texture;
 
 Shader *load_shader(MemoryArena *arena, const char *vertex_source, const char *fragment_source);
+
+void set_uniform_mat4(GLuint shader_id, const char *name, Matrix4x4 m);
 
 Texture *load_texture(MemoryArena *arena, const char *file_name);
 
