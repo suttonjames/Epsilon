@@ -9,7 +9,8 @@ typedef struct Platform {
 
     b32 running;
     b32 initialised;
-    //s32 width, height;
+
+    s32 width, height;
 } Platform;
 
 #endif /* PLATFORM_H */

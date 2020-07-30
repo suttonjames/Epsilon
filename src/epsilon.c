@@ -28,11 +28,13 @@ __declspec(dllexport) void init_game(HDC device_context, Platform *platform)
         "#version 330 core\n\
         layout(location = 0) in vec3 a_Position;\n\
         layout(location = 1) in vec2 a_TexCoord;\n\
-        uniform mat4 u_Transform;\n\
+        uniform mat4 u_Model;\n\
+        uniform mat4 u_View;\n\
+        uniform mat4 u_Projection;\n\
         out vec2 v_TexCoord;\n\
         void main()\n\
         {\n\
-            gl_Position = u_Transform * vec4(a_Position, 1.0);\n\
+            gl_Position = u_Projection * u_View * u_Model * vec4(a_Position, 1.0);\n\
             v_TexCoord = a_TexCoord;\n\
         }";
 
@@ -50,6 +52,14 @@ __declspec(dllexport) void init_game(HDC device_context, Platform *platform)
     game_state->mesh = load_mesh(&game_state->assets, "c:/dev/epsilon/assets/helmet.obj"); // temp
     game_state->mesh->shader = load_shader(&game_state->assets, vertex_source, fragment_source);
     game_state->mesh->texture = load_texture(&game_state->assets, "c:/dev/epsilon/assets/helmet_basecolor.tga");
+
+    Matrix4x4 model = mat4_rotate(to_radians(-55.0f), vec3(1.0f, 0.0f, 0.0f));
+    Matrix4x4 view = mat4_translate(vec3(0.0f, 0.0f, -3.0f));
+    Matrix4x4 projection = mat4_perspective(to_radians(45.0f), (f32)(platform->width / platform->height), 0.1f, 100.0f);
+
+    set_uniform_mat4(game_state->mesh->shader->id, "u_Model", model);
+    set_uniform_mat4(game_state->mesh->shader->id, "u_View", view);
+    set_uniform_mat4(game_state->mesh->shader->id, "u_Projection", projection);
 }
 
 __declspec(dllexport) void update_game(HDC device_context, Platform *platform)
@@ -65,10 +75,10 @@ __declspec(dllexport) void update_game(HDC device_context, Platform *platform)
 
     rotate_speed += 0.01f;
     Matrix4x4 trans = mat4(1.0f);
-    trans = mat4_mul(trans, mat4_scale(vec3(0.5f, 0.5f, 0.5f)));
-    trans = mat4_mul(trans, mat4_rotate(rotate_speed, vec3(-1.0f, 1.0f, .0f)));
+    //trans = mat4_mul(trans, mat4_scale(vec3(0.5f, 0.5f, 0.5f)));
+    trans = mat4_mul(trans, mat4_rotate(rotate_speed, vec3(-1.0f, 1.0f, 0.0f)));
 
-    set_uniform_mat4(game_state->mesh->shader->id, "u_Transform", trans);
+    set_uniform_mat4(game_state->mesh->shader->id, "u_Model", trans);
 
     glBindVertexArray(game_state->mesh->vertex_array);
     glBindTexture(GL_TEXTURE_2D, game_state->mesh->texture->id);

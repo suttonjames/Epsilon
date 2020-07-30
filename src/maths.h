@@ -5,6 +5,8 @@
 
 #define PI 3.1415926535897f
 
+inline f32 to_radians(f32 degrees) { return degrees * (PI / 180.0f); }
+
 typedef union Vector2 {
     struct { f32 x, y; };
     struct { f32 u, v; };
@@ -66,14 +68,13 @@ inline Matrix4x4 mat4(f32 f);
 
 inline Matrix4x4 mat4_mul(Matrix4x4 a, Matrix4x4 b);
 
-inline Matrix4x4 mat4_ortho(f32 left, f32 right, f32 bottom, f32 top, f32 near, f32 far);
-inline Matrix4x4 mat4_perspective(f32 fov, f32 aspect_ratio, f32 near, f32 far);
+inline Matrix4x4 mat4_ortho(f32 left, f32 right, f32 bottom, f32 top, f32 near_z, f32 far_z);
+inline Matrix4x4 mat4_perspective(f32 fov, f32 aspect_ratio, f32 near_z, f32 far_z);
 
 inline Matrix4x4 mat4_translate(Vector3 translation);
 inline Matrix4x4 mat4_rotate(f32 angle, Vector3 axis);
 inline Matrix4x4 mat4_scale(Vector3 scale);
 
 inline Matrix4x4 mat4_lookat(Vector3 eye, Vector3 centre, Vector3 up);
-
 
 #endif /* MATHS_H */

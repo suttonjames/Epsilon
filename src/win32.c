@@ -1,6 +1,5 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
-#include <assert.h>
 
 #include "platform.h"
 
@@ -84,6 +83,10 @@ LRESULT CALLBACK window_proc(HWND window, UINT message, WPARAM wParam, LPARAM lP
             platform.running = false;
             PostQuitMessage(0);
             break;
+        case WM_SIZE:
+            platform.width = LOWORD(lParam);
+            platform.height = HIWORD(lParam);
+            break;
         default:
             result = DefWindowProc(window, message, wParam, lParam);
     }
@@ -97,14 +100,15 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     platform.permanent_arena_size = gigabytes(1);
     platform.permanent_arena = VirtualAlloc(0, platform.permanent_arena_size, MEM_RESERVE|MEM_COMMIT, PAGE_READWRITE);
 
-    WNDCLASSA window_class = { 0 };
+    WNDCLASSEXA window_class = { 0 };
 
+    window_class.cbSize = sizeof(WNDCLASSEXA);
     window_class.style = CS_HREDRAW | CS_OWNDC | CS_VREDRAW;
     window_class.lpfnWndProc = window_proc;
     window_class.hInstance = hInstance;
     window_class.lpszClassName = "Win32Window";
 
-    RegisterClassA(&window_class);
+    RegisterClassExA(&window_class);
 
     HWND window = CreateWindowExA(
         0,

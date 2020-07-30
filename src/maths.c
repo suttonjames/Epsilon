@@ -28,38 +28,37 @@ inline Matrix4x4 mat4_mul(Matrix4x4 a, Matrix4x4 b)
     return result;
 }
 
-/*
-inline Matrix4x4 mat4_ortho(f32 left, f32 right, f32 bottom, f32 top, f32 near, f32 far)
+inline Matrix4x4 mat4_ortho(f32 left, f32 right, f32 bottom, f32 top, f32 near_z, f32 far_z)
 {
     Matrix4x4 result = mat4(0.0f);
 
     result.elements[0][0] = 2.0f / (right - left);
     result.elements[1][1] = 2.0f / (top - bottom);
-    result.elements[2][2] = 2.0f / (near - far);
+    result.elements[2][2] = 2.0f / (near_z - far_z);
     result.elements[3][3] = 1.0f;
 
     result.elements[3][0] = (left + right) / (left - right);
     result.elements[3][1] = (bottom + top) / (bottom - top);
-    result.elements[3][2] = (far + near) / (near - far);
+    result.elements[3][2] = (far_z + near_z) / (near_z - far_z);
 
     return result;
 }
 
-inline Matrix4x4 mat4_perspective(f32 fov, f32 aspect_ratio, f32 near, f32 far)
+
+inline Matrix4x4 mat4_perspective(f32 fov, f32 aspect_ratio, f32 near_z, f32 far_z)
 {
     Matrix4x4 result = mat4(0.0f);
 
-    float tan_theta_over_2 = tanf(fov / 2.0f);
+    f32 tan_theta_over_2 = tanf(fov / 2.0f);
 
     result.elements[0][0] = 1.0f / (aspect_ratio * tan_theta_over_2);
     result.elements[1][1] = 1.0f / tan_theta_over_2;
     result.elements[2][3] = -1.0f;
-    result.elements[2][2] = (near + far) / (near - far);
-    result.elements[3][2] = (2.0f * near * far) / (near - far);
+    result.elements[2][2] = (near_z + far_z) / (near_z - far_z);
+    result.elements[3][2] = (2.0f * near_z * far_z) / (near_z - far_z);
 
     return result;
 }
-*/
 
 inline Matrix4x4 mat4_translate(Vector3 translation)
 {
