@@ -1,38 +1,18 @@
 #ifndef OPENGL_H
 #define OPENGL_H
 
-#include "opengl_win32.h"
-
+#include <gl/Gl.h>
+#include "gl/wglext.h"
 #include "gl/glext.h"
 
-extern PFNGLATTACHSHADERPROC glAttachShader;
-extern PFNGLBINDBUFFERPROC glBindBuffer;
-extern PFNGLBINDVERTEXARRAYPROC glBindVertexArray;
-extern PFNGLBUFFERDATAPROC glBufferData;
-extern PFNGLCREATEBUFFERSPROC glCreateBuffers;
-extern PFNGLCREATEPROGRAMPROC glCreateProgram;
-extern PFNGLCREATESHADERPROC glCreateShader;
-extern PFNGLCREATEVERTEXARRAYSPROC glCreateVertexArrays;
-extern PFNGLCOMPILESHADERPROC glCompileShader;
-extern PFNGLDELETEBUFFERSPROC glDeleteBuffers;
-extern PFNGLDELETEPROGRAMPROC glDeleteProgram;
-extern PFNGLDELETESHADERPROC glDeleteShader;
-extern PFNGLDETACHSHADERPROC glDetachShader;
-extern PFNGLENABLEVERTEXATTRIBARRAYPROC glEnableVertexAttribArray;
-extern PFNGLGENBUFFERSPROC glGenBuffers;
-extern PFNGLGENVERTEXARRAYSPROC glGenVertexArrays;
-extern PFNGLGETPROGRAMINFOLOGPROC glGetProgramInfoLog;
-extern PFNGLGETPROGRAMIVPROC glGetProgramiv;
-extern PFNGLGETSHADERINFOLOGPROC glGetShaderInfoLog;
-extern PFNGLGETSHADERIVPROC glGetShaderiv;
-extern PFNGLGETUNIFORMLOCATIONPROC glGetUniformLocation;
-extern PFNGLLINKPROGRAMPROC glLinkProgram;
-extern PFNGLSHADERSOURCEPROC glShaderSource;
-extern PFNGLUNIFORMMATRIX4FVPROC glUniformMatrix4fv;
-extern PFNGLUSEPROGRAMPROC glUseProgram;
-extern PFNGLVERTEXATTRIBPOINTERPROC glVertexAttribPointer;
+#define GLProc(name, proc) PFN##proc##PROC name = 0;
+#include "opengl_functions.inc"
 
-static HGLRC init_opengl(HDC device_context);
+void load_opengl_functions(Platform *platform)
+{
+#define GLProc(name, proc) name = (PFN##proc##PROC)platform->load_opengl_function(#name);
+#include "opengl_functions.inc"
+}
 
 typedef struct Shader {
     GLuint id;

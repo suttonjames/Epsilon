@@ -3,12 +3,15 @@
 
 #include "platform.h"
 
-Platform platform;
+#include "opengl_win32.c"
 
-#define INIT_GAME(name) void name(HDC device_context, Platform *platform)
+static Platform platform;
+static HDC device_context;
+
+#define INIT_GAME(name) void name(Platform *platform)
 typedef INIT_GAME(InitGame);
 
-#define UPDATE_GAME(name) void name(HDC device_context, Platform *platform)
+#define UPDATE_GAME(name) void name(Platform *platform)
 typedef UPDATE_GAME(UpdateGame);
 
 #define SHUTDOWN_GAME(name) void name(void)
@@ -72,6 +75,12 @@ static void win32_unload_dll(GameCode *game_code)
     game_code->shutdown_game = 0;
 }
 
+static void win32_swap_buffers(void)
+{
+    //SwapBuffers(device_context);
+    wglSwapLayerBuffers(device_context, WGL_SWAP_MAIN_PLANE);
+}
+
 LRESULT CALLBACK window_proc(HWND window, UINT message, WPARAM wParam, LPARAM lParam)
 {
     LRESULT result = -1;
@@ -125,11 +134,16 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     ShowWindow(window, SW_SHOW);
     UpdateWindow(window);
 
-    HDC device_context = GetDC(window);
+    device_context = GetDC(window);
+
+    platform.load_opengl_function = win32_load_opengl_function;
+    platform.swap_buffers = win32_swap_buffers;
+
+    init_opengl(device_context);
 
     GameCode game_code = win32_load_dll();
 
-    game_code.init_game(device_context, &platform);
+    game_code.init_game(&platform);
 
     while (platform.running) {
         MSG message;
@@ -145,7 +159,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
             game_code = win32_load_dll();
         }
 
-        game_code.update_game(device_context, &platform);
+        game_code.update_game(&platform);
     }
 
     game_code.shutdown_game();

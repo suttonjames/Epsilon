@@ -1,42 +1,22 @@
-#include "opengl.h"
+#include <gl/Gl.h>
+#include "gl/wglext.h"
+#include "gl/glext.h"
 
 PFNWGLCHOOSEPIXELFORMATARBPROC wglChoosePixelFormatARB;
 PFNWGLCREATECONTEXTATTRIBSARBPROC wglCreateContextAttribsARB;
 PFNWGLMAKECONTEXTCURRENTARBPROC wglMakeContextCurrentARB;
 PFNWGLSWAPINTERVALEXTPROC wglSwapIntervalEXT;
 
-static void win32_load_opengl_functions()
+static void *win32_load_opengl_function(char *name)
 {
-#define GLProc(name, proc) name = (PFN##proc##PROC)wglGetProcAddress(#name);
-    GLProc(glAttachShader, GLATTACHSHADER);
-    GLProc(glBindBuffer, GLBINDBUFFER);
-    GLProc(glBindVertexArray, GLBINDVERTEXARRAY);
-    GLProc(glBufferData, GLBUFFERDATA);
-    GLProc(glCreateBuffers, GLCREATEBUFFERS);
-    GLProc(glCreateProgram, GLCREATEPROGRAM);
-    GLProc(glCreateShader, GLCREATESHADER);
-    GLProc(glCreateVertexArrays, GLCREATEVERTEXARRAYS);
-    GLProc(glCompileShader, GLCOMPILESHADER);
-    GLProc(glDeleteBuffers, GLDELETEBUFFERS);
-    GLProc(glDeleteProgram, GLDELETEPROGRAM);
-    GLProc(glDeleteShader, GLDELETESHADER);
-    GLProc(glDetachShader, GLDETACHSHADER);
-    GLProc(glEnableVertexAttribArray, GLENABLEVERTEXATTRIBARRAY);
-    GLProc(glGenBuffers, GLGENBUFFERS);
-    GLProc(glGenVertexArrays, GLGENVERTEXARRAYS);
-    GLProc(glGetProgramInfoLog, GLGETPROGRAMINFOLOG);
-    GLProc(glGetProgramiv, GLGETPROGRAMIV);
-    GLProc(glGetShaderInfoLog, GLGETSHADERINFOLOG);
-    GLProc(glGetShaderiv, GLGETSHADERIV);
-    GLProc(glGetUniformLocation, GLGETUNIFORMLOCATION);
-    GLProc(glLinkProgram, GLLINKPROGRAM);
-    GLProc(glShaderSource, GLSHADERSOURCE);
-    GLProc(glUniformMatrix4fv, GLUNIFORMMATRIX4FV);
-    GLProc(glUseProgram, GLUSEPROGRAM);
-    GLProc(glVertexAttribPointer, GLVERTEXATTRIBPOINTER);
+    void *p = (void *)wglGetProcAddress(name);
+    if(!p || p == (void *)0x1 || p == (void *)0x2 || p == (void *)0x3 || p == (void *)-1)
+        return 0;
+    else
+        return p;
 }
 
-HGLRC init_opengl(HDC device_context)
+static b32 init_opengl(HDC device_context)
 {
     //pfd for dummy context
     PIXELFORMATDESCRIPTOR pfd = {0};
@@ -93,9 +73,7 @@ HGLRC init_opengl(HDC device_context)
     wglMakeCurrent(device_context, render_context);
     wglSwapIntervalEXT(1);
 
-    win32_load_opengl_functions();
-
     glEnable(GL_DEPTH_TEST);
 
-    return render_context;
+    return true;
 }

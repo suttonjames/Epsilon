@@ -12,17 +12,16 @@
 
 GameState *game_state;
 
-static HDC hdc = 0; // temp
 static f32 rotate_speed = 0.0f;
 
-__declspec(dllexport) void init_game(HDC device_context, Platform *platform)
+__declspec(dllexport) void init_game(Platform *platform)
 {
+    load_opengl_functions(platform);
+
     game_state = (GameState *)platform->permanent_arena;
     if (game_state) platform->initialised = true;
 
     alloc_arena(&game_state->assets, platform->permanent_arena_size - sizeof(game_state), (u64 *)platform->permanent_arena + sizeof(game_state));
-
-    HGLRC rendering_context = init_opengl(device_context);
 
     const GLchar *vertex_source =
         "#version 330 core\n\
@@ -62,14 +61,13 @@ __declspec(dllexport) void init_game(HDC device_context, Platform *platform)
     set_uniform_mat4(game_state->mesh->shader->id, "u_Projection", projection);
 }
 
-__declspec(dllexport) void update_game(HDC device_context, Platform *platform)
+__declspec(dllexport) void update_game(Platform *platform)
 {
     if (!game_state) {
         game_state = (GameState *)platform->permanent_arena;
-        win32_load_opengl_functions();
+        load_opengl_functions(platform);
     }
 
-    hdc = device_context; // temp
     glClearColor(0.1f, 0.2f, 0.2f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -85,8 +83,7 @@ __declspec(dllexport) void update_game(HDC device_context, Platform *platform)
     glUseProgram(game_state->mesh->shader->id);
     glDrawElements(GL_TRIANGLES, game_state->mesh->num_indices, GL_UNSIGNED_INT, 0);
 
-    SwapBuffers(hdc);
-    //wglSwapLayerBuffers(device_context, WGL_SWAP_MAIN_PLANE);
+    platform->swap_buffers();
 }
 
 __declspec(dllexport) void shutdown_game()

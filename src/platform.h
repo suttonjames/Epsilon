@@ -11,6 +11,9 @@ typedef struct Platform {
     b32 initialised;
 
     s32 width, height;
+
+    void *(*load_opengl_function)(char *name);
+    void (*swap_buffers)(void);
 } Platform;
 
 #endif /* PLATFORM_H */
