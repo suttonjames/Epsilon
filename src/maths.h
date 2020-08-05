@@ -88,6 +88,7 @@ typedef union Quaternion {
 } Quaternion;
 
 inline Quaternion quat_mul(Quaternion a, Quaternion b);
+inline Quaternion quat_mul_float(Quaternion q, f32 f) { return (Quaternion){ q.x * f, q.y * f, q.z * f, q.w * f}; }
 inline Vector3 quat_mul_vec3(Quaternion q, Vector3 v);
 
 inline f32 quat_length_sq(Quaternion q) { return (q.x * q.x + q.y * q.y + q.z * q.z + q.w * q.w); }
