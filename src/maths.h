@@ -19,6 +19,7 @@ inline Vector2 vec2(f32 x, f32 y) { return (Vector2){ x, y }; }
 inline Vector2 vec2_add(Vector2 a, Vector2 b) { return vec2(a.x + b.x, a.y + b.y); }
 inline Vector2 vec2_sub(Vector2 a, Vector2 b) { return vec2(a.x - b.x, a.y - b.y); }
 inline Vector2 vec2_mul(Vector2 a, Vector2 b) { return vec2(a.x * b.x, a.y * b.y); }
+inline Vector2 vec2_mul_float(Vector2 a, f32 b) { return vec2(a.x * b, a.y * b); }
 inline Vector2 vec2_div(Vector2 a, Vector2 b) { return vec2(a.x / b.x, a.y / b.y); }
 
 typedef union Vector3 {
@@ -41,7 +42,7 @@ inline Vector3 vec3_norm(Vector3 v) { return vec3_mul_float(v, (1.0f / vec3_leng
 
 inline f32 vec3_dot(Vector3 a, Vector3 b) { return a.x * b.x + a.y * b.y + a.z * b.z; }
 inline Vector3 vec3_cross(Vector3 a, Vector3 b) {
-    return vec3(a.y * a.z - a.z * b.y,
+    return vec3(a.y * b.z - a.z * b.y,
         a.z * b.x - a.x * b.z,
         a.x * b.y - a.y * b.x);
 }
@@ -67,6 +68,7 @@ typedef union Matrix4x4 {
 inline Matrix4x4 mat4(f32 f);
 
 inline Matrix4x4 mat4_mul(Matrix4x4 a, Matrix4x4 b);
+inline Matrix4x4 mat4_mul_float(Matrix4x4 m, f32 f);
 
 inline Matrix4x4 mat4_ortho(f32 left, f32 right, f32 bottom, f32 top, f32 near_z, f32 far_z);
 inline Matrix4x4 mat4_perspective(f32 fov, f32 aspect_ratio, f32 near_z, f32 far_z);
@@ -76,5 +78,27 @@ inline Matrix4x4 mat4_rotate(f32 angle, Vector3 axis);
 inline Matrix4x4 mat4_scale(Vector3 scale);
 
 inline Matrix4x4 mat4_lookat(Vector3 eye, Vector3 centre, Vector3 up);
+
+typedef union Quaternion {
+    struct {
+        struct { f32 x, y, z; };
+        f32 w;
+    };
+    f32 elements[4];
+} Quaternion;
+
+inline Quaternion quat_mul(Quaternion a, Quaternion b);
+inline Vector3 quat_mul_vec3(Quaternion q, Vector3 v);
+
+inline f32 quat_length_sq(Quaternion q) { return (q.x * q.x + q.y * q.y + q.z * q.z + q.w * q.w); }
+inline f32 quat_length(Quaternion q) { return (f32)sqrt(quat_length_sq(q)); }
+inline Quaternion quat_norm(Quaternion q) { return quat_mul_float(q, (1.0f / quat_length(q))); }
+
+inline Quaternion quat_conjugate(Quaternion q);
+
+inline Quaternion angle_axis(f32 angle, Vector3 axis);
+
+inline Matrix4x4 quat_to_mat4(Quaternion q);
+inline Quaternion mat4_to_quat(Matrix4x4 m);
 
 #endif /* MATHS_H */

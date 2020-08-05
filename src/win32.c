@@ -75,6 +75,17 @@ static void win32_unload_dll(GameCode *game_code)
     game_code->shutdown_game = 0;
 }
 
+static Vector2 win32_get_mouse_position(HWND window)
+{
+    Vector2 result = { 0 };
+    POINT mouse;
+    GetCursorPos(&mouse);
+    ScreenToClient(window, &mouse);
+    result.x = (f32)(mouse.x);
+    result.y = (f32)(mouse.y);
+    return result;
+}
+
 static void win32_swap_buffers(void)
 {
     //SwapBuffers(device_context);
@@ -92,6 +103,22 @@ LRESULT CALLBACK window_proc(HWND window, UINT message, WPARAM wParam, LPARAM lP
             platform.running = false;
             PostQuitMessage(0);
             break;
+        case WM_KEYDOWN:
+        case WM_SYSKEYDOWN:
+        case WM_KEYUP:
+        case WM_SYSKEYUP:
+            u64 key_code = wParam;
+            b32 was_down = !!(lParam & (1 << 30));
+            b32 is_down =   !(lParam & (1 << 31));
+
+            if (is_down) 
+                platform.keys[key_code].pressed = true;
+            else 
+                platform.keys[key_code].pressed = false;
+            break;
+        case WM_MOUSEMOVE:
+            platform.mouse_position = win32_get_mouse_position(window);
+            break;
         case WM_SIZE:
             platform.width = LOWORD(lParam);
             platform.height = HIWORD(lParam);
@@ -103,8 +130,10 @@ LRESULT CALLBACK window_proc(HWND window, UINT message, WPARAM wParam, LPARAM lP
     return result;
 }
 
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd)
+int main()
+//int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd)
 {
+    HINSTANCE hInstance = GetModuleHandle(0);
     platform.running = true;
     platform.permanent_arena_size = gigabytes(1);
     platform.permanent_arena = VirtualAlloc(0, platform.permanent_arena_size, MEM_RESERVE|MEM_COMMIT, PAGE_READWRITE);

@@ -33,4 +33,7 @@ typedef s32 b32;
 #define megabytes(value) (kilobytes(value)*1024)
 #define gigabytes(value) (megabytes(value)*1024)
 
+#include "maths.h"
+#include "maths.c"
+
 #endif /* LANGUAGE_LAYER_H */

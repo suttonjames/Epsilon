@@ -4,6 +4,8 @@
 typedef struct GameState {
     MemoryArena assets;
     Mesh *mesh;
+
+    Camera *camera;
 } GameState;
 
 #endif /* EPSILON_H */
