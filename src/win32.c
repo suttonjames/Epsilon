@@ -86,6 +86,51 @@ static Vector2 win32_get_mouse_position(HWND window)
     return result;
 }
 
+static void win32_init_timer()
+{
+    LARGE_INTEGER counter;
+    QueryPerformanceFrequency(&counter);
+    platform.ticks_per_second = counter.QuadPart;
+}
+
+static void win32_timer_start_frame()
+{
+    LARGE_INTEGER counter;
+    QueryPerformanceCounter(&counter);
+    platform.start_ticks = counter.QuadPart;
+}
+
+static void win32_timer_end_frame(HWND window)
+{
+    LARGE_INTEGER counter;
+    QueryPerformanceCounter(&counter);
+    platform.end_ticks = counter.QuadPart;
+
+    u64 elapsed_ticks = platform.end_ticks - platform.start_ticks;
+    u64 desired_ticks = (u64)(platform.ticks_per_second / platform.frames_per_second);
+    s64 ticks_to_wait = (s64)(desired_ticks - elapsed_ticks);
+
+    LARGE_INTEGER wait_start;
+    LARGE_INTEGER wait_end;
+
+    QueryPerformanceCounter(&wait_start);
+
+    while (ticks_to_wait > 0) {
+        DWORD sleep_ms = (DWORD)(1000.0f * ((f64)ticks_to_wait / platform.ticks_per_second));
+        if (sleep_ms > 0)
+            Sleep(sleep_ms);
+
+        QueryPerformanceCounter(&wait_end);
+        ticks_to_wait -= wait_end.QuadPart - wait_start.QuadPart;
+        wait_start = wait_end;
+    }
+
+    f32 ms_f = (f32)(1000.0f * ((f64)elapsed_ticks / platform.ticks_per_second));
+    char title[32];
+    sprintf(title, "Epsilon Engine: %f", ms_f);
+    SetWindowTextA(window, title);
+}
+
 static void win32_swap_buffers(void)
 {
     //SwapBuffers(device_context);
@@ -111,9 +156,9 @@ LRESULT CALLBACK window_proc(HWND window, UINT message, WPARAM wParam, LPARAM lP
             b32 was_down = !!(lParam & (1 << 30));
             b32 is_down =   !(lParam & (1 << 31));
 
-            if (is_down) 
+            if (is_down)
                 platform.keys[key_code].pressed = true;
-            else 
+            else
                 platform.keys[key_code].pressed = false;
             break;
         case WM_MOUSEMOVE:
@@ -135,6 +180,9 @@ int main()
 {
     HINSTANCE hInstance = GetModuleHandle(0);
     platform.running = true;
+
+    win32_init_timer();
+
     platform.permanent_arena_size = gigabytes(1);
     platform.permanent_arena = VirtualAlloc(0, platform.permanent_arena_size, MEM_RESERVE|MEM_COMMIT, PAGE_READWRITE);
 
@@ -165,6 +213,7 @@ int main()
 
     device_context = GetDC(window);
 
+    platform.frames_per_second = 60.0f;
     platform.load_opengl_function = win32_load_opengl_function;
     platform.swap_buffers = win32_swap_buffers;
 
@@ -175,6 +224,8 @@ int main()
     game_code.init_game(&platform);
 
     while (platform.running) {
+        win32_timer_start_frame();
+
         MSG message;
         while (PeekMessage(&message, window, 0, 0, PM_REMOVE)) {
             TranslateMessage(&message);
@@ -189,6 +240,8 @@ int main()
         }
 
         game_code.update_game(&platform);
+
+        win32_timer_end_frame(window); // passing window is temp just to dispaly ms_f
     }
 
     game_code.shutdown_game();

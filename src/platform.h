@@ -19,6 +19,12 @@ typedef struct Platform {
     Vector2 mouse_position;
     Button keys[256];
 
+    f32 frames_per_second;
+
+    u64 ticks_per_second;
+    u64 start_ticks;
+    u64 end_ticks;
+
     void *(*load_opengl_function)(char *name);
     void (*swap_buffers)(void);
 } Platform;
