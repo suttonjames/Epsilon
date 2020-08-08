@@ -10,6 +10,6 @@ typedef struct Camera {
 } Camera;
 
 Camera *init_camera(MemoryArena *arena, Matrix4x4 projection);
-void update_camera(Camera *camera, Platform *platform);
+void update_camera(Camera *camera, InputState *input, s32 width, s32 height);
 
 #endif /* CAMERA_H */

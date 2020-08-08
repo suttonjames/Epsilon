@@ -52,19 +52,19 @@ Camera *init_camera(MemoryArena *arena, Matrix4x4 projection)
     return camera;
 }
 
-void update_camera(Camera *camera, Platform *platform)
+void update_camera(Camera *camera, InputState *input, s32 width, s32 height)
 {
     Vector3 velocity_dir = { 0 };
     f32 velocity_speed = 0.1f;
 
-    if (platform->keys[87].pressed == true) // W
+    if (input->key_pressed[KEY_W] == true)
         velocity_dir = vec3_add(velocity_dir, forward(camera));
-    if (platform->keys[83].pressed == true) // S
+    if (input->key_pressed[KEY_S] == true)
         velocity_dir = vec3_add(velocity_dir, backward(camera));
 
-    if (platform->keys[65].pressed == true) // A
+    if (input->key_pressed[KEY_A] == true)
         velocity_dir = vec3_add(velocity_dir, left(camera));
-    if (platform->keys[68].pressed == true) // D
+    if (input->key_pressed[KEY_D] == true)
         velocity_dir = vec3_add(velocity_dir, right(camera));
 
     if (vec3_length(velocity_dir) > 0)
@@ -73,8 +73,8 @@ void update_camera(Camera *camera, Platform *platform)
     camera->position = vec3_add(camera->position, vec3_mul_float(velocity_dir, velocity_speed));
 
     Vector2 delta = vec2(0.0f, 0.0f);
-    delta.x = platform->mouse_position.x - platform->width / 2;
-    delta.y = platform->mouse_position.y - platform->height / 2;
+    delta.x = (f32)(input->position.x - width / 2);
+    delta.y = (f32)(input->position.y - height / 2);
 
     Quaternion yaw = angle_axis(0.005f * to_radians(delta.x), vec3(0.0f, 1.0f, 0.0f));
     Quaternion pitch = angle_axis(0.005f * to_radians(delta.y), right(camera));
@@ -83,6 +83,5 @@ void update_camera(Camera *camera, Platform *platform)
 
     camera->orientation = quat_mul(camera->orientation, rotation);
     camera->orientation = quat_norm(camera->orientation);
-
     update_camera_view(camera);
 }

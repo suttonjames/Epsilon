@@ -3,6 +3,7 @@
 
 #include "platform.h"
 
+#include "platform.c"
 #include "opengl_win32.c"
 
 static Platform platform;
@@ -124,7 +125,6 @@ static void win32_timer_end_frame(HWND window)
         ticks_to_wait -= wait_end.QuadPart - wait_start.QuadPart;
         wait_start = wait_end;
     }
-
     f32 ms_f = (f32)(1000.0f * ((f64)elapsed_ticks / platform.ticks_per_second));
     char title[32];
     sprintf(title, "Epsilon Engine: %f", ms_f);
@@ -156,17 +156,58 @@ LRESULT CALLBACK window_proc(HWND window, UINT message, WPARAM wParam, LPARAM lP
             b32 was_down = !!(lParam & (1 << 30));
             b32 is_down =   !(lParam & (1 << 31));
 
-            if (is_down)
-                platform.keys[key_code].pressed = true;
-            else
-                platform.keys[key_code].pressed = false;
+            KeyModifiers modifiers = 0;
+            if (GetKeyState(VK_CONTROL) & 0x8000)
+                modifiers |= KEY_MOD_CTRL;
+            if (GetKeyState(VK_SHIFT) & 0x8000)
+                modifiers |= KEY_MOD_SHIFT;
+            if (GetKeyState(VK_MENU) & 0x8000)
+                modifiers |= KEY_MOD_ALT;
+
+            if (is_down) {
+                platform.input.key_pressed[key_code] = true;
+                push_event_to_queue(&platform, key_press_event(key_code, modifiers, was_down));
+            }
+            else {
+                platform.input.key_pressed[key_code] = false;
+                push_event_to_queue(&platform, key_release_event(key_code, modifiers));
+            }
             break;
+        case WM_LBUTTONDOWN:
+            platform.input.button_pressed[MOUSE_BUTTON_LEFT] = true;
+            push_event_to_queue(&platform, mouse_press_event(MOUSE_BUTTON_LEFT, platform.input.position));
+            break;
+        case WM_LBUTTONUP:
+            platform.input.button_pressed[MOUSE_BUTTON_LEFT] = false;
+            push_event_to_queue(&platform, mouse_release_event(MOUSE_BUTTON_LEFT, platform.input.position));
+            break;
+        case WM_RBUTTONDOWN:
+            platform.input.button_pressed[MOUSE_BUTTON_RIGHT] = true;
+            push_event_to_queue(&platform, mouse_press_event(MOUSE_BUTTON_RIGHT, platform.input.position));
+            break;
+        case WM_RBUTTONUP:
+            platform.input.button_pressed[MOUSE_BUTTON_RIGHT] = false;
+            push_event_to_queue(&platform, mouse_release_event(MOUSE_BUTTON_RIGHT, platform.input.position));
+            break;
+        // Middle button?
         case WM_MOUSEMOVE:
-            platform.mouse_position = win32_get_mouse_position(window);
+            Vector2 last_mouse = platform.input.position;
+            platform.input.position = win32_get_mouse_position(window);
+            push_event_to_queue(&platform, mouse_move_event(platform.input.position, vec2(platform.input.position.x - last_mouse.x, platform.input.position.y - last_mouse.y)));
+            break;
+        case WM_MOUSEWHEEL:
+            s16 wheel_delta = HIWORD(wParam);
+            push_event_to_queue(&platform, mouse_scroll_event(vec2(0, (f32)wheel_delta)));
+            break;
+        case WM_MOUSEHWHEEL:
+            s16 wheel_hdelta = HIWORD(wParam);
+            push_event_to_queue(&platform, mouse_scroll_event(vec2((f32)wheel_hdelta, 0)));
             break;
         case WM_SIZE:
+            Vector2 last_size = vec2((f32)platform.width, (f32)platform.height);
             platform.width = LOWORD(lParam);
             platform.height = HIWORD(lParam);
+            window_resize_event(vec2((f32)platform.width, (f32)platform.height), vec2((f32)platform.width - last_size.x, (f32)platform.height - last_size.y));
             break;
         default:
             result = DefWindowProc(window, message, wParam, lParam);
@@ -214,6 +255,7 @@ int main()
     device_context = GetDC(window);
 
     platform.frames_per_second = 60.0f;
+    platform.input.position = vec2((f32)platform.width/2, (f32)platform.height/2);
     platform.load_opengl_function = win32_load_opengl_function;
     platform.swap_buffers = win32_swap_buffers;
 

@@ -14,6 +14,14 @@ GameState *game_state;
 
 static f32 rotate_speed = 0.0f;
 
+static void handle_events(Platform *platform)
+{
+    for (u32 i = 0; i < platform->event_count; i++) {
+        // handle input events
+    }
+    platform->event_count = 0;
+}
+
 __declspec(dllexport) void init_game(Platform *platform)
 {
     load_opengl_functions(platform);
@@ -69,11 +77,13 @@ __declspec(dllexport) void update_game(Platform *platform)
         load_opengl_functions(platform);
     }
 
+    handle_events(platform);
+
     glClearColor(0.1f, 0.2f, 0.2f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glViewport(0, 0, platform->width, platform->height);
 
-    update_camera(game_state->camera, platform);
+    update_camera(game_state->camera, &platform->input, platform->width, platform->height);
 
     rotate_speed += 0.01f;
     Matrix4x4 trans = mat4(1.0f);
