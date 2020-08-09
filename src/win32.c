@@ -28,14 +28,16 @@ typedef struct GameCode {
 
 } GameCode;
 
-static char *dll_file_name = "c:/dev/epsilon/bin/epsilon.dll"; // temp
-static char *temp_file_name = "c:/dev/epsilon/bin/epsilon_temp.dll"; // temp
+static char dll_file_path[MAX_PATH];
+static char temp_dll_file_path[MAX_PATH];
+static char executable_directory[MAX_PATH];
+static char executable_path[MAX_PATH];
 
 static FILETIME win32_get_last_write_to_dll()
 {
     FILETIME last_write_time = { 0 };
     WIN32_FIND_DATAA find_data;
-    HANDLE file_handle = FindFirstFileA(dll_file_name, &find_data);
+    HANDLE file_handle = FindFirstFileA(dll_file_path, &find_data);
     if (file_handle != INVALID_HANDLE_VALUE) {
         last_write_time = find_data.ftLastWriteTime;
         FindClose(file_handle);
@@ -50,8 +52,8 @@ static GameCode win32_load_dll()
 
     game_code.last_write_time = win32_get_last_write_to_dll();
 
-    CopyFileA(dll_file_name, temp_file_name, FALSE);
-    game_code.dll = LoadLibraryA(temp_file_name);
+    CopyFileA(dll_file_path, temp_dll_file_path, FALSE);
+    game_code.dll = LoadLibraryA(temp_dll_file_path);
     if (game_code.dll) {
         game_code.init_game = (InitGame *)GetProcAddress(game_code.dll, "init_game");
         game_code.update_game = (UpdateGame *)GetProcAddress(game_code.dll, "update_game");
@@ -223,6 +225,19 @@ int main()
     platform.running = true;
 
     win32_init_timer();
+
+    DWORD size_of_executable_path = GetModuleFileNameA(0, executable_path, sizeof(executable_path));
+    memcpy(executable_directory, executable_path, size_of_executable_path);
+    char *one_past_last_slash = executable_directory;
+
+    for (s32 i = 0; executable_directory[i]; ++i) {
+        if (executable_directory[i] == '\\')
+            one_past_last_slash = executable_directory + i + 1;
+    }
+    *one_past_last_slash = 0;
+ 
+    wsprintf(dll_file_path, "%s%s.dll", executable_directory, "epsilon");
+    wsprintf(temp_dll_file_path, "%stemp_%s.dll", executable_directory, "epsilon");
 
     platform.permanent_arena_size = gigabytes(1);
     platform.permanent_arena = VirtualAlloc(0, platform.permanent_arena_size, MEM_RESERVE|MEM_COMMIT, PAGE_READWRITE);
