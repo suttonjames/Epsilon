@@ -56,18 +56,38 @@ __declspec(dllexport) void init_game(Platform *platform)
             colour = texture(u_Texture, v_TexCoord);\n\
         }";
 
+    const GLchar *sky_box_vertex_source =
+        "#version 330 core\n\
+        layout(location = 0) in vec3 a_Position;\n\
+        uniform mat4 u_View;\n\
+        uniform mat4 u_Projection;\n\
+        out vec3 v_TexCoord;\n\
+        void main()\n\
+        {\n\
+            vec4 pos = u_Projection * u_View * vec4(a_Position, 1.0);\n\
+            gl_Position = pos.xyww;\n\
+            v_TexCoord = a_Position;\n\
+        }";
+
+    const GLchar *sky_box_fragment_source =
+        "#version 330 core\n\
+        in vec3 v_TexCoord;\n\
+        uniform samplerCube u_Texture;\n\
+        out vec4 colour;\n\
+        void main()\n\
+        {\n\
+            colour = texture(u_Texture, v_TexCoord);\n\
+        }";
+
     game_state->mesh = load_mesh(&game_state->assets, "c:/dev/epsilon/assets/helmet.obj"); // temp
     game_state->mesh->shader = load_shader(&game_state->assets, vertex_source, fragment_source);
     game_state->mesh->texture = load_texture(&game_state->assets, "c:/dev/epsilon/assets/helmet_basecolor.tga");
 
-    Matrix4x4 model = mat4(1.0f);//mat4_rotate(to_radians(-55.0f), vec3(1.0f, 0.0f, 0.0f));
-    //Matrix4x4 view = mat4_translate(vec3(0.0f, 0.0f, -3.0f));
+    game_state->sky_box = load_cubemap(&game_state->assets, "c:/dev/epsilon/assets/skybox/");
+    game_state->sky_box->shader = load_shader(&game_state->assets, sky_box_vertex_source, sky_box_fragment_source);
+
     Matrix4x4 projection = mat4_perspective(to_radians(45.0f), (f32)(platform->width / platform->height), 0.1f, 100.0f);
     game_state->camera = init_camera(&game_state->assets, projection);
-
-    set_uniform_mat4(game_state->mesh->shader->id, "u_Model", model);
-    set_uniform_mat4(game_state->mesh->shader->id, "u_View", game_state->camera->view_matrix);
-    set_uniform_mat4(game_state->mesh->shader->id, "u_Projection", projection);
 }
 
 __declspec(dllexport) void update_game(Platform *platform)
@@ -85,19 +105,35 @@ __declspec(dllexport) void update_game(Platform *platform)
 
     update_camera(game_state->camera, &platform->input, platform->width, platform->height);
 
+    // render model
     rotate_speed += 0.01f;
-    Matrix4x4 trans = mat4(1.0f);
+    Matrix4x4 trans = mat4_translate(vec3(0.0f, 0.0f, 0.0f));
     //trans = mat4_mul(trans, mat4_scale(vec3(0.5f, 0.5f, 0.5f)));
     trans = mat4_mul(trans, mat4_rotate(rotate_speed, vec3(-1.0f, 1.0f, 0.0f)));
 
-    //set_uniform_mat4(game_state->mesh->shader->id, "u_Model", trans);
+    glUseProgram(game_state->mesh->shader->id);
+    set_uniform_mat4(game_state->mesh->shader->id, "u_Model", trans);
     set_uniform_mat4(game_state->mesh->shader->id, "u_View", game_state->camera->view_matrix);
     set_uniform_mat4(game_state->mesh->shader->id, "u_Projection", game_state->camera->projection_matrix);
-
-    glBindVertexArray(game_state->mesh->vertex_array);
+    
     glBindTexture(GL_TEXTURE_2D, game_state->mesh->texture->id);
-    glUseProgram(game_state->mesh->shader->id);
+    glBindVertexArray(game_state->mesh->vertex_array);
     glDrawElements(GL_TRIANGLES, game_state->mesh->num_indices, GL_UNSIGNED_INT, 0);
+    
+    // render skybox
+    glDepthFunc(GL_LEQUAL);
+
+    Matrix4x4 view = mat4_from_mat3(mat3(game_state->camera->view_matrix));
+
+    glUseProgram(game_state->sky_box->shader->id);
+    set_uniform_mat4(game_state->sky_box->shader->id, "u_View", view);
+    set_uniform_mat4(game_state->sky_box->shader->id, "u_Projection", game_state->camera->projection_matrix);
+    
+    glBindTexture(GL_TEXTURE_CUBE_MAP, game_state->sky_box->texture->id);
+    glBindVertexArray(game_state->sky_box->vertex_array);
+    glDrawArrays(GL_TRIANGLES, 0, 36);
+    
+    glDepthFunc(GL_LESS);
 
     platform->swap_buffers();
 }

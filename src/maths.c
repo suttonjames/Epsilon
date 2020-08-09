@@ -1,5 +1,18 @@
 #include "maths.h"
 
+inline Matrix3x3 mat3(Matrix4x4 m)
+{
+    Matrix3x3 result = { 0 };
+
+    for (u32 i = 0; i < 3; i++) {
+        for (u32 j = 0; j < 3; j++) {
+            result.elements[i][j] = m.elements[i][j];
+        }
+    }
+
+    return result;
+}
+
 inline Matrix4x4 mat4(f32 f)
 {
     Matrix4x4 result = { 0 };
@@ -8,6 +21,19 @@ inline Matrix4x4 mat4(f32 f)
     result.elements[1][1] = f;
     result.elements[2][2] = f;
     result.elements[3][3] = f;
+
+    return result;
+}
+
+inline Matrix4x4 mat4_from_mat3(Matrix3x3 m)
+{
+    Matrix4x4 result = mat4(1.0f);
+
+    for (u32 i = 0; i < 3; i++) {
+        for (u32 j = 0; j < 3; j++) {
+            result.elements[i][j] = m.elements[i][j];
+        }
+    }
 
     return result;
 }

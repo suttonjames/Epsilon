@@ -72,16 +72,19 @@ void update_camera(Camera *camera, InputState *input, s32 width, s32 height)
 
     camera->position = vec3_add(camera->position, vec3_mul_float(velocity_dir, velocity_speed));
 
-    Vector2 delta = vec2(0.0f, 0.0f);
-    delta.x = (f32)(input->position.x - width / 2);
-    delta.y = (f32)(input->position.y - height / 2);
+    if (input->button_pressed[MOUSE_BUTTON_LEFT]) {
+        Vector2 delta = vec2(0.0f, 0.0f);
+        delta.x = (f32)(input->position.x - width / 2);
+        delta.y = (f32)(input->position.y - height / 2);
 
-    Quaternion yaw = angle_axis(0.005f * to_radians(delta.x), vec3(0.0f, 1.0f, 0.0f));
-    Quaternion pitch = angle_axis(0.005f * to_radians(delta.y), right(camera));
+        Quaternion yaw = angle_axis(0.005f * to_radians(delta.x), vec3(0.0f, 1.0f, 0.0f));
+        Quaternion pitch = angle_axis(0.005f * to_radians(delta.y), right(camera));
 
-    Quaternion rotation = quat_mul(yaw, pitch);
+        Quaternion rotation = quat_mul(yaw, pitch);
 
-    camera->orientation = quat_mul(camera->orientation, rotation);
-    camera->orientation = quat_norm(camera->orientation);
+        camera->orientation = quat_mul(camera->orientation, rotation);
+        camera->orientation = quat_norm(camera->orientation);
+    }
+
     update_camera_view(camera);
 }

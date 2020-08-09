@@ -60,12 +60,20 @@ inline Vector4 vec4_sub(Vector4 a, Vector4 b) { return vec4(a.x - b.x, a.y - b.y
 inline Vector4 vec4_mul(Vector4 a, Vector4 b) { return vec4(a.x * b.x, a.y * b.y, a.z * b.z, a.w * b.w); }
 inline Vector4 vec4_div(Vector4 a, Vector4 b) { return vec4(a.x / b.x, a.y / b.y, a.z / b.z, a.w / b.w); }
 
+typedef union Matrix3x3 {
+    f32 elements[3][3];
+    f32 item[9];
+} Matrix3x3;
+
 typedef union Matrix4x4 {
     f32 elements[4][4];
     f32 item[16];
 } Matrix4x4;
 
+inline Matrix3x3 mat3(Matrix4x4 m);
+
 inline Matrix4x4 mat4(f32 f);
+inline Matrix4x4 mat4_from_mat3(Matrix3x3 m);
 
 inline Matrix4x4 mat4_mul(Matrix4x4 a, Matrix4x4 b);
 inline Matrix4x4 mat4_mul_float(Matrix4x4 m, f32 f);

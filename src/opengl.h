@@ -22,10 +22,19 @@ typedef struct Texture {
     GLuint id;
 } Texture;
 
+typedef struct TextureCube {
+    Texture *texture;
+    Shader *shader;
+
+    GLuint vertex_array, vertex_buffer, index_buffer;
+} TextureCube;
+
 Shader *load_shader(MemoryArena *arena, const char *vertex_source, const char *fragment_source);
 
 void set_uniform_mat4(GLuint shader_id, const char *name, Matrix4x4 m);
 
 Texture *load_texture(MemoryArena *arena, const char *file_name);
+
+TextureCube *load_cubemap(MemoryArena *arena, const char *file_name);
 
 #endif /* OPENGL_H */

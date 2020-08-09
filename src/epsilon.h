@@ -4,6 +4,7 @@
 typedef struct GameState {
     MemoryArena assets;
     Mesh *mesh;
+    TextureCube *sky_box;
 
     Camera *camera;
 } GameState;
