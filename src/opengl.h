@@ -30,6 +30,7 @@ typedef struct TextureCube {
 } TextureCube;
 
 Shader *load_shader(MemoryArena *arena, const char *vertex_source, const char *fragment_source);
+Shader *load_shader_from_file(MemoryArena *arena, const char *vertex_file, const char *fragment_file);
 
 void set_uniform_mat4(GLuint shader_id, const char *name, Matrix4x4 m);
 

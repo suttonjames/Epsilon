@@ -20,8 +20,11 @@ Shader *load_shader(MemoryArena *arena, const char *vertex_source, const char *f
     glGetProgramiv(program, GL_LINK_STATUS, &success);
     if (!success) {
         glGetShaderInfoLog(vertex_shader, 512, NULL, info_log);
+        printf("%s\n", info_log);
         glGetShaderInfoLog(fragment_shader, 512, NULL, info_log);
+        printf("%s\n", info_log);
         glGetProgramInfoLog(program, 512, NULL, info_log);
+        printf("%s\n", info_log);
         assert(false);
         // log errors
     }
@@ -33,6 +36,19 @@ Shader *load_shader(MemoryArena *arena, const char *vertex_source, const char *f
 
     Shader *shader = push_struct(arena, Shader);
     shader->id = program;
+
+    return shader;
+}
+
+Shader *load_shader_from_file(MemoryArena *arena, const char *vertex_file, const char *fragment_file)
+{
+    char *vertex_source = read_file(vertex_file);
+    char *fragment_source = read_file(fragment_file);
+
+    Shader *shader = load_shader(arena, vertex_source, fragment_source);
+
+    free(vertex_source);
+    free(fragment_source);
 
     return shader;
 }

@@ -15,7 +15,7 @@ static Vector3 right(Camera *camera)
     return quat_mul_vec3(quat_conjugate(camera->orientation), vec3(1.0f, 0.0f, 0.0f));
 }
 
-Vector3 left(Camera *camera)
+static Vector3 left(Camera *camera)
 {
     return quat_mul_vec3(quat_conjugate(camera->orientation), vec3(-1.0f, 0.0f, 0.0f));
 }
