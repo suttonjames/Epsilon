@@ -3,8 +3,11 @@
 
 typedef struct GameState {
     MemoryArena assets;
+
     Mesh *mesh;
-    TextureCube *sky_box;
+    Mesh *sky_box;
+    Mesh *box;
+    Mesh *sphere;
 
     Camera *camera;
 } GameState;

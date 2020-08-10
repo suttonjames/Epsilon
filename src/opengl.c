@@ -89,7 +89,7 @@ Texture *load_texture(MemoryArena *arena, const char *file_name)
     return texture;
 }
 
-TextureCube *load_cubemap(MemoryArena *arena, const char *file_name)
+Texture *load_cubemap(MemoryArena *arena, const char *file_name)
 {
      //right, left, top, bottom, back, front
     const char *cube_map[6];
@@ -123,69 +123,9 @@ TextureCube *load_cubemap(MemoryArena *arena, const char *file_name)
         stbi_image_free(data);
     }
 
-    TextureCube *texture_cube = push_struct(arena, TextureCube);
-    texture_cube->texture = push_struct(arena, Texture);
-    texture_cube->texture->id = id;
+    Texture *texture = push_struct(arena, Texture);
+    texture->id = id;
 
-    f32 sky_box_verts[] = {
-    // positions
-    -1.0f,  1.0f, -1.0f,
-    -1.0f, -1.0f, -1.0f,
-     1.0f, -1.0f, -1.0f,
-     1.0f, -1.0f, -1.0f,
-     1.0f,  1.0f, -1.0f,
-    -1.0f,  1.0f, -1.0f,
-
-    -1.0f, -1.0f,  1.0f,
-    -1.0f, -1.0f, -1.0f,
-    -1.0f,  1.0f, -1.0f,
-    -1.0f,  1.0f, -1.0f,
-    -1.0f,  1.0f,  1.0f,
-    -1.0f, -1.0f,  1.0f,
-
-     1.0f, -1.0f, -1.0f,
-     1.0f, -1.0f,  1.0f,
-     1.0f,  1.0f,  1.0f,
-     1.0f,  1.0f,  1.0f,
-     1.0f,  1.0f, -1.0f,
-     1.0f, -1.0f, -1.0f,
-
-    -1.0f, -1.0f,  1.0f,
-    -1.0f,  1.0f,  1.0f,
-     1.0f,  1.0f,  1.0f,
-     1.0f,  1.0f,  1.0f,
-     1.0f, -1.0f,  1.0f,
-    -1.0f, -1.0f,  1.0f,
-
-    -1.0f,  1.0f, -1.0f,
-     1.0f,  1.0f, -1.0f,
-     1.0f,  1.0f,  1.0f,
-     1.0f,  1.0f,  1.0f,
-    -1.0f,  1.0f,  1.0f,
-    -1.0f,  1.0f, -1.0f,
-
-    -1.0f, -1.0f, -1.0f,
-    -1.0f, -1.0f,  1.0f,
-     1.0f, -1.0f, -1.0f,
-     1.0f, -1.0f, -1.0f,
-    -1.0f, -1.0f,  1.0f,
-     1.0f, -1.0f,  1.0f
-};
-
-    glGenVertexArrays(1, &texture_cube->vertex_array);
-    glBindVertexArray(texture_cube->vertex_array);
-
-    glGenBuffers(1, &texture_cube->vertex_buffer);
-    glBindBuffer(GL_ARRAY_BUFFER, texture_cube->vertex_buffer);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(sky_box_verts), &sky_box_verts, GL_STATIC_DRAW);
-
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vector3), 0);
-
-    /*glGenBuffers(1, &texture_cube->index_buffer);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, texture_cube->index_buffer);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, texture_cube->num_indices * sizeof(u32), &texture_cube->indices[0], GL_STATIC_DRAW);*/
-
-    return texture_cube;
+    return texture;
 }
 

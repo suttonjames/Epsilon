@@ -22,6 +22,10 @@ typedef struct Mesh {
     GLuint vertex_array, vertex_buffer, index_buffer;
 } Mesh;
 
-Mesh *load_mesh(MemoryArena *arena, const char *file_name);
+Mesh *load_mesh_from_file(MemoryArena *arena, const char *file_name);
+Mesh *create_skybox(MemoryArena *arena, const char *file_name);
+
+Mesh *load_cube(MemoryArena *arena);
+Mesh *load_sphere(MemoryArena *arena);
 
 #endif /* MESH_H */

@@ -1,12 +1,35 @@
 #include "mesh.h"
 
+static void upload_mesh(Mesh *mesh)
+{
+    glGenVertexArrays(1, &mesh->vertex_array);
+    glBindVertexArray(mesh->vertex_array);
+
+    glGenBuffers(1, &mesh->vertex_buffer);
+    glBindBuffer(GL_ARRAY_BUFFER, mesh->vertex_buffer);
+    glBufferData(GL_ARRAY_BUFFER, mesh->num_vertices * sizeof(Vertex), mesh->vertices, GL_STATIC_DRAW);
+
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), 0);
+
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(3 * sizeof(f32)));
+
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(5 * sizeof(f32)));
+
+    glGenBuffers(1, &mesh->index_buffer);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->index_buffer);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, mesh->num_indices * sizeof(u32), mesh->indices, GL_STATIC_DRAW);
+}
+
 static char *read_line(FILE *file)
 {
     char *line = NULL;
 
     while (1) {
         s32 c = fgetc(file);
-        if (c == EOF) return NULL;
+        if (c == EOF) return line;
         sb_push(line, (char)c);
         if (c == '\n') {
             sb_push(line, '\0');
@@ -15,7 +38,7 @@ static char *read_line(FILE *file)
     }
 }
 
-Mesh *load_mesh(MemoryArena *arena, const char *file_name)
+Mesh *load_mesh_from_file(MemoryArena *arena, const char *file_name)
 {
     FILE *file;
 
@@ -94,25 +117,7 @@ Mesh *load_mesh(MemoryArena *arena, const char *file_name)
     memcpy(mesh->vertices, vertices, sizeof(Vertex) * mesh->num_vertices);
     memcpy(mesh->indices, indices, sizeof(u32) * mesh->num_indices);
 
-    glGenVertexArrays(1, &mesh->vertex_array);
-    glBindVertexArray(mesh->vertex_array);
-
-    glGenBuffers(1, &mesh->vertex_buffer);
-    glBindBuffer(GL_ARRAY_BUFFER, mesh->vertex_buffer);
-    glBufferData(GL_ARRAY_BUFFER, mesh->num_vertices * sizeof(Vertex), &mesh->vertices[0], GL_STATIC_DRAW);
-
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), 0);
-
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(3 * sizeof(f32)));
-
-    glEnableVertexAttribArray(2);
-    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(5 * sizeof(f32)));
-
-    glGenBuffers(1, &mesh->index_buffer);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->index_buffer);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, mesh->num_indices * sizeof(u32), &mesh->indices[0], GL_STATIC_DRAW);
+    upload_mesh(mesh);
 
     sb_free(positions);
     sb_free(texcoords);
@@ -127,3 +132,24 @@ Mesh *load_mesh(MemoryArena *arena, const char *file_name)
     return mesh;
 }
 
+Mesh *create_skybox(MemoryArena *arena, const char *file_name)
+{
+    Mesh *sky_box = load_cube(arena);
+    sky_box->texture = load_cubemap(arena, file_name);
+    sky_box->shader = load_shader_from_file(arena, "c:/dev/epsilon/assets/skybox_vertex.glsl", "c:/dev/epsilon/assets/skybox_fragment.glsl");
+
+    return sky_box;
+}
+
+Mesh *load_cube(MemoryArena *arena)
+{
+    // temp! have some sort of mesh/asset libary so we dont reupload each time
+    Mesh *mesh = load_mesh_from_file(arena, "c:/dev/epsilon/assets/cube.obj");
+    return mesh;
+}
+
+Mesh *load_sphere(MemoryArena *arena)
+{
+    Mesh *mesh = load_mesh_from_file(arena, "c:/dev/epsilon/assets/sphere.obj");
+    return mesh;
+}
