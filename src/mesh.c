@@ -136,7 +136,7 @@ Mesh *create_skybox(MemoryArena *arena, const char *file_name)
 {
     Mesh *sky_box = load_cube(arena);
     sky_box->texture = load_cubemap(arena, file_name);
-    sky_box->shader = load_shader_from_file(arena, "c:/dev/epsilon/assets/skybox_vertex.glsl", "c:/dev/epsilon/assets/skybox_fragment.glsl");
+    sky_box->shader = load_shader_from_file(arena, "../assets/skybox_vertex.glsl", "../assets/skybox_fragment.glsl");
 
     return sky_box;
 }
@@ -144,12 +144,12 @@ Mesh *create_skybox(MemoryArena *arena, const char *file_name)
 Mesh *load_cube(MemoryArena *arena)
 {
     // temp! have some sort of mesh/asset libary so we dont reupload each time
-    Mesh *mesh = load_mesh_from_file(arena, "c:/dev/epsilon/assets/cube.obj");
+    Mesh *mesh = load_mesh_from_file(arena, "../assets/cube.obj");
     return mesh;
 }
 
 Mesh *load_sphere(MemoryArena *arena)
 {
-    Mesh *mesh = load_mesh_from_file(arena, "c:/dev/epsilon/assets/sphere.obj");
+    Mesh *mesh = load_mesh_from_file(arena, "../assets/sphere.obj");
     return mesh;
 }

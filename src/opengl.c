@@ -93,12 +93,12 @@ Texture *load_cubemap(MemoryArena *arena, const char *file_name)
 {
      //right, left, top, bottom, back, front
     const char *cube_map[6];
-    cube_map[0] = "c:/dev/epsilon/assets/skybox/right.jpg";
-    cube_map[1] = "c:/dev/epsilon/assets/skybox/left.jpg";
-    cube_map[2] = "c:/dev/epsilon/assets/skybox/top.jpg";
-    cube_map[3] = "c:/dev/epsilon/assets/skybox/bottom.jpg";
-    cube_map[4] = "c:/dev/epsilon/assets/skybox/front.jpg";
-    cube_map[5] = "c:/dev/epsilon/assets/skybox/back.jpg";
+    cube_map[0] = "../assets/skybox/right.jpg";
+    cube_map[1] = "../assets/skybox/left.jpg";
+    cube_map[2] = "../assets/skybox/top.jpg";
+    cube_map[3] = "../assets/skybox/bottom.jpg";
+    cube_map[4] = "../assets/skybox/front.jpg";
+    cube_map[5] = "../assets/skybox/back.jpg";
 
     GLuint id;
     glGenTextures(1, &id);

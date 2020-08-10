@@ -10,7 +10,7 @@
 
 #include "epsilon.h"
 
-GameState *game_state;
+static GameState *game_state;
 
 static f32 rotate_speed = 0.0f;
 
@@ -31,19 +31,19 @@ __declspec(dllexport) void init_game(Platform *platform)
 
     alloc_arena(&game_state->assets, platform->permanent_arena_size - sizeof(game_state), (u64 *)platform->permanent_arena + sizeof(game_state));
 
-    game_state->mesh = load_mesh_from_file(&game_state->assets, "c:/dev/epsilon/assets/helmet.obj"); // temp
-    game_state->mesh->shader = load_shader_from_file(&game_state->assets, "c:/dev/epsilon/assets/basic_vertex.glsl", "c:/dev/epsilon/assets/basic_fragment.glsl");
+    game_state->mesh = load_mesh_from_file(&game_state->assets, "../assets/helmet.obj"); // temp
+    game_state->mesh->shader = load_shader_from_file(&game_state->assets, "../assets/basic_vertex.glsl", "c:/dev/epsilon/assets/basic_fragment.glsl");
     game_state->mesh->texture = load_texture(&game_state->assets, "c:/dev/epsilon/assets/helmet_basecolor.tga");
 
-    game_state->sky_box = create_skybox(&game_state->assets, "c:/dev/epsilon/assets/skybox/");
+    game_state->sky_box = create_skybox(&game_state->assets, "../assets/skybox/");
 
     game_state->box = load_cube(&game_state->assets);
     game_state->box->shader = game_state->mesh->shader; // have a shader library instead
-    game_state->box->texture = load_texture(&game_state->assets, "c:/dev/epsilon/assets/container.jpg");
+    game_state->box->texture = load_texture(&game_state->assets, "../assets/container.jpg");
 
     game_state->sphere = load_sphere(&game_state->assets);
     game_state->sphere->shader = game_state->mesh->shader; // have a shader libary instead
-    game_state->sphere->texture = load_texture(&game_state->assets, "c:/dev/epsilon/assets/basic_diff.tga");
+    game_state->sphere->texture = load_texture(&game_state->assets, "../assets/basic_diff.tga");
 
     Matrix4x4 projection = mat4_perspective(to_radians(45.0f), (f32)(platform->width / platform->height), 0.1f, 100.0f);
     game_state->camera = init_camera(&game_state->assets, projection);
