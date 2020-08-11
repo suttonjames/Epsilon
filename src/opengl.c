@@ -53,9 +53,45 @@ Shader *load_shader_from_file(MemoryArena *arena, const char *vertex_file, const
     return shader;
 }
 
+void set_uniform_int(GLuint shader_id, const char *name, s32 value)
+{
+    GLuint location = glGetUniformLocation(shader_id, name);
+    glUniform1i(location, value);
+}
+
+void set_uniform_float(GLuint shader_id, const char *name, f32 value)
+{
+    GLuint location = glGetUniformLocation(shader_id, name);
+    glUniform1f(location, value);
+}
+
+void set_uniform_vec2(GLuint shader_id, const char *name, Vector2 v)
+{
+    GLuint location = glGetUniformLocation(shader_id, name);
+    glUniform2f(location, v.x, v.y);
+}
+
+void set_uniform_vec3(GLuint shader_id, const char *name, Vector3 v)
+{
+    GLuint location = glGetUniformLocation(shader_id, name);
+    glUniform3f(location, v.x, v.y, v.z);
+}
+
+void set_uniform_vec4(GLuint shader_id, const char *name, Vector4 v)
+{
+    GLuint location = glGetUniformLocation(shader_id, name);
+    glUniform4f(location, v.x, v.y, v.z, v.w);
+}
+
+void set_uniform_mat3(GLuint shader_id, const char *name, Matrix3x3 m)
+{
+    GLuint location = glGetUniformLocation(shader_id, name);
+    glUniformMatrix3fv(location, 1, GL_FALSE, m.item);
+}
+
 void set_uniform_mat4(GLuint shader_id, const char *name, Matrix4x4 m)
 {
-    GLuint location = glGetUniformLocation(shader_id, name); // temp store uniform locations when setting up shader
+    GLuint location = glGetUniformLocation(shader_id, name); // temp, store uniform locations when setting up shader
     glUniformMatrix4fv(location, 1, GL_FALSE, m.item);
 }
 
@@ -91,7 +127,6 @@ Texture *load_texture(MemoryArena *arena, const char *file_name)
 
 Texture *load_cubemap(MemoryArena *arena, const char *file_name)
 {
-     //right, left, top, bottom, back, front
     const char *cube_map[6];
     cube_map[0] = "../assets/skybox/right.jpg";
     cube_map[1] = "../assets/skybox/left.jpg";

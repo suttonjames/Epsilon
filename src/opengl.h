@@ -25,6 +25,12 @@ typedef struct Texture {
 Shader *load_shader(MemoryArena *arena, const char *vertex_source, const char *fragment_source);
 Shader *load_shader_from_file(MemoryArena *arena, const char *vertex_file, const char *fragment_file);
 
+void set_uniform_int(GLuint shader_id, const char *name, s32 value);
+void set_uniform_float(GLuint shader_id, const char *name, f32 value);
+void set_uniform_vec2(GLuint shader_id, const char *name, Vector2 v);
+void set_uniform_vec3(GLuint shader_id, const char *name, Vector3 v);
+void set_uniform_vec4(GLuint shader_id, const char *name, Vector4 v);
+void set_uniform_mat3(GLuint shader_id, const char *name, Matrix3x3 m);
 void set_uniform_mat4(GLuint shader_id, const char *name, Matrix4x4 m);
 
 Texture *load_texture(MemoryArena *arena, const char *file_name);
