@@ -9,6 +9,12 @@ typedef struct Vertex {
     Vector3 normal;
 } Vertex;
 
+typedef struct Material {
+    Texture *diffuse_map;
+    Texture *specular_map;
+    Texture *emission_map;
+} Material;
+
 typedef struct Mesh {
     Vertex *vertices;
     u32 num_vertices;
@@ -17,7 +23,7 @@ typedef struct Mesh {
     u32 num_indices;
 
     Shader *shader;
-    Texture *texture;
+    Material *material;
 
     GLuint vertex_array, vertex_buffer, index_buffer;
 } Mesh;

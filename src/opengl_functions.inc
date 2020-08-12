@@ -1,3 +1,4 @@
+GLProc(glActiveTexture, GLACTIVETEXTURE);
 GLProc(glAttachShader, GLATTACHSHADER);
 GLProc(glBindBuffer, GLBINDBUFFER);
 GLProc(glBindVertexArray, GLBINDVERTEXARRAY);

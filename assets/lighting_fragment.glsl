@@ -4,40 +4,50 @@ in vec3 v_Position;
 in vec2 v_TexCoord;
 in vec3 v_Normal;
 
-uniform sampler2D u_Texture;
-uniform vec3 u_LightColour;
-uniform vec3 u_LightPosition;
-uniform vec3 u_CameraPosition;
+struct Material {
+    sampler2D diffuse;
+    sampler2D specular;
+    sampler2D emission;
+    float shininess;
+};
+
+struct Light {
+    vec3 position;
+    vec3 ambient;
+    vec3 diffuse;
+    vec3 specular;
+};
+
+uniform Material material;
+uniform Light light;
+uniform vec3 camera_position;
 
 out vec4 colour;
 
 void main()
 {
-    // colour of texture
-    vec4 object_colour = texture(u_Texture, v_TexCoord);
-    //vec4 object_colour = vec4(0.2, 0.6, 0.3, 1.0);
-
     // ambient
-    float ambient_strength = 0.1;
-    vec3 ambient = ambient_strength * u_LightColour;
+    vec3 ambient = light.ambient * texture(material.diffuse, v_TexCoord).rgb;
 
     // diffuse
     vec3 norm = normalize(v_Normal);
-    vec3 light_direction = normalize(u_LightPosition - v_Position);
-
+    vec3 light_direction = normalize(light.position - v_Position);
     float diff = max(dot(norm, light_direction), 0.0);
-    vec3 diffuse = diff * u_LightColour;
+    vec3 diffuse = light.diffuse * diff * texture(material.diffuse, v_TexCoord).rgb;
 
     // specular
-    float specularStrength = 0.5;
-
-    vec3 view_direction = normalize(u_CameraPosition - v_Position);
+    vec3 view_direction = normalize(camera_position - v_Position);
     vec3 reflect_direction = reflect(-light_direction, norm);
+    float spec = pow(max(dot(view_direction, reflect_direction), 0.0), material.shininess);
+    vec3 specular = light.specular * spec * texture(material.specular, v_TexCoord).rgb;
 
-    float spec = pow(max(dot(view_direction, reflect_direction), 0.0), 32);
-    vec3 specular = specularStrength * spec * u_LightColour;
+    // emission
+    vec3 emission = vec3(0.0);
+    if (texture(material.specular, v_TexCoord).r == 0.0) {
+        emission = texture(material.emission, v_TexCoord).rgb;
+    }
 
-    vec3 result = (ambient + diffuse + specular) * vec3(object_colour);
+    vec3 result = ambient + diffuse + specular + emission;
 
     colour = vec4(result, 1.0);
 }
