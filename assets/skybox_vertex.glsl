@@ -1,15 +1,15 @@
 #version 330 core
 
-layout(location = 0) in vec3 a_Position;
+layout(location = 0) in vec3 vertex_position;
 
-uniform mat4 u_View;
-uniform mat4 u_Projection;
+uniform mat4 view;
+uniform mat4 projection;
 
-out vec3 v_TexCoord;
+out vec3 frag_texcoord;
 
 void main()
 {
-	vec4 pos = u_Projection * u_View * vec4(a_Position, 1.0);
-	gl_Position = pos.xyww;
-	v_TexCoord = a_Position;
+	vec4 position = projection * view * vec4(vertex_position, 1.0);
+	gl_Position = position.xyww;
+	frag_texcoord = vertex_position;
 }

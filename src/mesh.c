@@ -135,7 +135,8 @@ Mesh *load_mesh_from_file(MemoryArena *arena, const char *file_name)
 Mesh *create_skybox(MemoryArena *arena, const char *file_name)
 {
     Mesh *sky_box = load_cube(arena);
-    sky_box->texture = load_cubemap(arena, file_name);
+    sky_box->texture = generate_texture_cubemap(arena, file_name);
+    //sky_box->texture = load_cubemap(arena, file_name);
     sky_box->shader = load_shader_from_file(arena, "../assets/skybox_vertex.glsl", "../assets/skybox_fragment.glsl");
 
     return sky_box;

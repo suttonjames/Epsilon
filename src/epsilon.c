@@ -3,6 +3,11 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
+#include "memory.h"
+#include "opengl.h"
+#include "mesh.h"
+#include "camera.h"
+
 #include "memory.c"
 #include "opengl.c"
 #include "mesh.c"
@@ -31,7 +36,7 @@ __declspec(dllexport) void init_game(Platform *platform)
 
     alloc_arena(&game_state->assets, platform->permanent_arena_size - sizeof(game_state), (u64 *)platform->permanent_arena + sizeof(game_state));
 
-    game_state->sky_box = create_skybox(&game_state->assets, "../assets/skybox/");
+    game_state->sky_box = create_skybox(&game_state->assets, "../assets/environment.hdr");
 
     game_state->box = load_cube(&game_state->assets);
     game_state->box->shader = load_shader_from_file(&game_state->assets, "../assets/lighting_vertex.glsl", "../assets/lighting_fragment.glsl");
@@ -80,7 +85,7 @@ __declspec(dllexport) void update_game(Platform *platform)
     set_uniform_int(game_state->box->shader->id, "material.emission", 2);
     set_uniform_float(game_state->box->shader->id, "material.shininess", 32.0f);
 
-    set_uniform_vec3(game_state->box->shader->id, "u_CameraPosition", game_state->camera->position);
+    set_uniform_vec3(game_state->box->shader->id, "camera_position", game_state->camera->position);
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, game_state->box->material->diffuse_map->id);
@@ -91,22 +96,24 @@ __declspec(dllexport) void update_game(Platform *platform)
     glBindVertexArray(game_state->box->vertex_array);
     glDrawElements(GL_TRIANGLES, game_state->box->num_indices, GL_UNSIGNED_INT, 0);
 
-    /*
+
     // render skybox
     glDepthFunc(GL_LEQUAL);
 
     Matrix4x4 view = mat4_from_mat3(mat3(game_state->camera->view_matrix));
 
     glUseProgram(game_state->sky_box->shader->id);
-    set_uniform_mat4(game_state->sky_box->shader->id, "u_View", view);
-    set_uniform_mat4(game_state->sky_box->shader->id, "u_Projection", game_state->camera->projection_matrix);
+    set_uniform_mat4(game_state->sky_box->shader->id, "view", view);
+    set_uniform_mat4(game_state->sky_box->shader->id, "projection", game_state->camera->projection_matrix);
 
     glBindTexture(GL_TEXTURE_CUBE_MAP, game_state->sky_box->texture->id);
     glBindVertexArray(game_state->sky_box->vertex_array);
     glDrawElements(GL_TRIANGLES, game_state->sky_box->num_indices, GL_UNSIGNED_INT, 0);
 
+    glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+
     glDepthFunc(GL_LESS);
-    */
+
     platform->swap_buffers();
 }
 

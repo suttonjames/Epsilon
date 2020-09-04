@@ -24,6 +24,7 @@ typedef struct Mesh {
 
     Shader *shader;
     Material *material;
+    Texture *texture;
 
     GLuint vertex_array, vertex_buffer, index_buffer;
 } Mesh;

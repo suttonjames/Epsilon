@@ -100,24 +100,38 @@ Texture *load_texture(MemoryArena *arena, const char *file_name)
     GLuint id;
     glGenTextures(1, &id);
     glBindTexture(GL_TEXTURE_2D, id);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-    s32 width, height, channels;
-    stbi_set_flip_vertically_on_load(true);
-    u8 *data = stbi_load(file_name, &width, &height, &channels, 0);
-    if (data) {
-        if (channels == 3)
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-        else if (channels == 4)
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+    if (stbi_is_hdr(file_name)) {
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+        s32 width, height, channels;
+        stbi_set_flip_vertically_on_load(true);
+        u8 *data = (u8*)stbi_loadf(file_name, &width, &height, &channels, 0);
+
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, width, height, 0, GL_RGB, GL_FLOAT, data);
+        stbi_image_free(data);
     } else {
-        assert(false);
-        // log error
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+        s32 width, height, channels;
+        stbi_set_flip_vertically_on_load(true);
+        u8 *data = stbi_load(file_name, &width, &height, &channels, 0);
+        if (data) {
+            if (channels == 3)
+                glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+            else if (channels == 4)
+                glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+        } else {
+            assert(false);
+            // log error
+        }
+        stbi_image_free(data);
     }
-    stbi_image_free(data);
 
     Texture *texture = push_struct(arena, Texture);
     texture->id = id;
@@ -127,6 +141,7 @@ Texture *load_texture(MemoryArena *arena, const char *file_name)
 
 Texture *load_cubemap(MemoryArena *arena, const char *file_name)
 {
+    // sort this out
     const char *cube_map[6];
     cube_map[0] = "../assets/skybox/right.jpg";
     cube_map[1] = "../assets/skybox/left.jpg";
@@ -162,5 +177,66 @@ Texture *load_cubemap(MemoryArena *arena, const char *file_name)
     texture->id = id;
 
     return texture;
+}
+
+Texture *generate_texture_cubemap(MemoryArena *arena, const char *file_name)
+{
+    glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
+    s32 size = 1024;
+
+    GLuint framebuffer, renderbuffer;
+    glGenFramebuffers(1, &framebuffer);
+    glGenRenderbuffers(1, &renderbuffer);
+    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+    glBindRenderbuffer(GL_RENDERBUFFER, renderbuffer);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, size, size);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, renderbuffer);
+
+    Texture *cubemap = push_struct(arena, Texture);
+    glGenTextures(1, &cubemap->id);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, cubemap->id);
+    for (unsigned int i = 0; i < 6; i++) {
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB32F, size, size, 0, GL_RGB, GL_FLOAT, NULL);
+    }
+
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+    Matrix4x4 framebuffer_projection = mat4_perspective(to_radians(90.0f), 1.0, 0.1f, 100.0f);
+    Matrix4x4 framebuffer_view[6] = {
+        mat4_lookat(vec3(0.0f, 0.0f, 0.0f), vec3(1.0f, 0.0f, 0.0f), vec3(0.0f, -1.0f, 0.0f)),
+        mat4_lookat(vec3(0.0f, 0.0f, 0.0f), vec3(-1.0f, 0.0f, 0.0f), vec3(0.0f, -1.0f, 0.0f)),
+        mat4_lookat(vec3(0.0f, 0.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f), vec3(0.0f, 0.0f, 1.0f)),
+        mat4_lookat(vec3(0.0f, 0.0f, 0.0f), vec3(0.0f, -1.0f, 0.0f), vec3(0.0f, 0.0f, -1.0f)),
+        mat4_lookat(vec3(0.0f, 0.0f, 0.0f), vec3(0.0f, 0.0f, 1.0f), vec3(0.0f, -1.0f, 0.0f)),
+        mat4_lookat(vec3(0.0f, 0.0f, 0.0f), vec3(0.0f, 0.0f, -1.0f), vec3(0.0f, -1.0f, 0.0f))
+    };
+
+    Shader *shader = load_shader_from_file(arena, "../assets/cubemap_vertex.glsl", "../assets/cubemap_fragment.glsl");
+    Texture *texture = load_texture(arena, file_name);
+
+    glUseProgram(shader->id);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, texture->id);
+    set_uniform_mat4(shader->id, "projection", framebuffer_projection);
+
+    glViewport(0, 0, size, size);
+    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+
+    for (int i = 0; i < 6; i++) {
+        set_uniform_mat4(shader->id, "view", framebuffer_view[i]);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, cubemap->id, 0);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        //generate_and_draw_cube();
+        Mesh *cube = load_cube(arena);
+        glBindVertexArray(cube->vertex_array);
+        glDrawElements(GL_TRIANGLES, cube->num_indices, GL_UNSIGNED_INT, 0);
+    }
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    return cubemap;
 }
 
