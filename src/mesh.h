@@ -10,9 +10,10 @@ typedef struct Vertex {
 } Vertex;
 
 typedef struct Material {
-    Texture *diffuse_map;
-    Texture *specular_map;
-    Texture *emission_map;
+    Texture *albedo;
+    Texture *normal;
+    Texture *metalness;
+    Texture *roughness;
 } Material;
 
 typedef struct Mesh {
@@ -34,5 +35,6 @@ Mesh *create_skybox(MemoryArena *arena, const char *file_name);
 
 Mesh *load_cube(MemoryArena *arena);
 Mesh *load_sphere(MemoryArena *arena);
+void draw_quad(void);
 
 #endif /* MESH_H */

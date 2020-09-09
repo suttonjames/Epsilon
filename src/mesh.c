@@ -136,8 +136,7 @@ Mesh *create_skybox(MemoryArena *arena, const char *file_name)
 {
     Mesh *sky_box = load_cube(arena);
     sky_box->texture = generate_texture_cubemap(arena, file_name);
-    //sky_box->texture = load_cubemap(arena, file_name);
-    sky_box->shader = load_shader_from_file(arena, "../assets/skybox_vertex.glsl", "../assets/skybox_fragment.glsl");
+    sky_box->shader = load_shader_from_file(arena, "../assets/shaders/skybox_vertex.glsl", "../assets/shaders/skybox_fragment.glsl");
 
     return sky_box;
 }
@@ -145,12 +144,43 @@ Mesh *create_skybox(MemoryArena *arena, const char *file_name)
 Mesh *load_cube(MemoryArena *arena)
 {
     // temp! have some sort of mesh/asset libary so we dont reupload each time
-    Mesh *mesh = load_mesh_from_file(arena, "../assets/cube.obj");
+    Mesh *mesh = load_mesh_from_file(arena, "../assets/meshes/cube.obj");
     return mesh;
 }
 
 Mesh *load_sphere(MemoryArena *arena)
 {
-    Mesh *mesh = load_mesh_from_file(arena, "../assets/sphere.obj");
+    Mesh *mesh = load_mesh_from_file(arena, "../assets/meshes/sphere.obj");
     return mesh;
 }
+
+void draw_quad(void)
+{
+    f32 vertices[] = {
+       -1.0f, 1.0f, 0.0f, 0.0f, 1.0f,
+       -1.0f,-1.0f, 0.0f, 0.0f, 0.0f,
+        1.0f, 1.0f, 0.0f, 1.0f, 1.0f,
+        1.0f,-1.0f, 0.0f, 1.0f, 0.0f
+    };
+
+    GLuint vertex_array, vertex_buffer;
+    glGenVertexArrays(1, &vertex_array);
+    glBindVertexArray(vertex_array);
+    glGenBuffers(1, &vertex_buffer);
+
+    glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), &vertices, GL_STATIC_DRAW);
+
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(f32), 0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(f32), (void*)(3 * sizeof(f32)));
+
+    glBindVertexArray(vertex_array);
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+    glBindVertexArray(0);
+
+    glDeleteBuffers(1, &vertex_buffer);
+    glDeleteVertexArrays(1, &vertex_array);
+}
+

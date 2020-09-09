@@ -182,7 +182,7 @@ Texture *load_cubemap(MemoryArena *arena, const char *file_name)
 Texture *generate_texture_cubemap(MemoryArena *arena, const char *file_name)
 {
     glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
-    s32 size = 1024;
+    s32 size = 512;
 
     GLuint framebuffer, renderbuffer;
     glGenFramebuffers(1, &framebuffer);
@@ -195,7 +195,7 @@ Texture *generate_texture_cubemap(MemoryArena *arena, const char *file_name)
     Texture *cubemap = push_struct(arena, Texture);
     glGenTextures(1, &cubemap->id);
     glBindTexture(GL_TEXTURE_CUBE_MAP, cubemap->id);
-    for (unsigned int i = 0; i < 6; i++) {
+    for (u32 i = 0; i < 6; i++) {
         glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB32F, size, size, 0, GL_RGB, GL_FLOAT, NULL);
     }
 
@@ -215,7 +215,7 @@ Texture *generate_texture_cubemap(MemoryArena *arena, const char *file_name)
         mat4_lookat(vec3(0.0f, 0.0f, 0.0f), vec3(0.0f, 0.0f, -1.0f), vec3(0.0f, -1.0f, 0.0f))
     };
 
-    Shader *shader = load_shader_from_file(arena, "../assets/cubemap_vertex.glsl", "../assets/cubemap_fragment.glsl");
+    Shader *shader = load_shader_from_file(arena, "../assets/shaders/cubemap_vertex.glsl", "../assets/shaders/cubemap_fragment.glsl");
     Texture *texture = load_texture(arena, file_name);
 
     glUseProgram(shader->id);
@@ -226,11 +226,10 @@ Texture *generate_texture_cubemap(MemoryArena *arena, const char *file_name)
     glViewport(0, 0, size, size);
     glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
 
-    for (int i = 0; i < 6; i++) {
+    for (s32 i = 0; i < 6; i++) {
         set_uniform_mat4(shader->id, "view", framebuffer_view[i]);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, cubemap->id, 0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        //generate_and_draw_cube();
         Mesh *cube = load_cube(arena);
         glBindVertexArray(cube->vertex_array);
         glDrawElements(GL_TRIANGLES, cube->num_indices, GL_UNSIGNED_INT, 0);
@@ -239,4 +238,175 @@ Texture *generate_texture_cubemap(MemoryArena *arena, const char *file_name)
 
     return cubemap;
 }
+
+Texture *generate_texture_irradiance(MemoryArena *arena, Texture *cubemap)
+{
+    s32 size = 32;
+
+    GLuint framebuffer, renderbuffer;
+    glGenFramebuffers(1, &framebuffer);
+    glGenRenderbuffers(1, &renderbuffer);
+    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+    glBindRenderbuffer(GL_RENDERBUFFER, renderbuffer);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, size, size);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, renderbuffer);
+
+    Texture *irradiance = push_struct(arena, Texture);
+    glGenTextures(1, &irradiance->id);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, irradiance->id);
+    for (u32 i = 0; i < 6; i++) {
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB16F, size, size, 0, GL_RGB, GL_FLOAT, NULL);
+    }
+
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+    Matrix4x4 framebuffer_projection = mat4_perspective(to_radians(90.0f), 1.0, 0.1f, 100.0f);
+    Matrix4x4 framebuffer_view[6] = {
+        mat4_lookat(vec3(0.0f, 0.0f, 0.0f), vec3(1.0f, 0.0f, 0.0f), vec3(0.0f, -1.0f, 0.0f)),
+        mat4_lookat(vec3(0.0f, 0.0f, 0.0f), vec3(-1.0f, 0.0f, 0.0f), vec3(0.0f, -1.0f, 0.0f)),
+        mat4_lookat(vec3(0.0f, 0.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f), vec3(0.0f, 0.0f, 1.0f)),
+        mat4_lookat(vec3(0.0f, 0.0f, 0.0f), vec3(0.0f, -1.0f, 0.0f), vec3(0.0f, 0.0f, -1.0f)),
+        mat4_lookat(vec3(0.0f, 0.0f, 0.0f), vec3(0.0f, 0.0f, 1.0f), vec3(0.0f, -1.0f, 0.0f)),
+        mat4_lookat(vec3(0.0f, 0.0f, 0.0f), vec3(0.0f, 0.0f, -1.0f), vec3(0.0f, -1.0f, 0.0f))
+    };
+
+    Shader *shader = load_shader_from_file(arena, "../assets/shaders/irradiance_vertex.glsl", "../assets/shaders/irradiance_fragment.glsl");
+
+    glUseProgram(shader->id);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, cubemap->id);
+    set_uniform_mat4(shader->id, "projection", framebuffer_projection);
+
+    glViewport(0, 0, size, size);
+    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+
+    for (s32 i = 0; i < 6; i++) {
+        set_uniform_mat4(shader->id, "view", framebuffer_view[i]);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, irradiance->id, 0);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        Mesh *cube = load_cube(arena);
+        glBindVertexArray(cube->vertex_array);
+        glDrawElements(GL_TRIANGLES, cube->num_indices, GL_UNSIGNED_INT, 0);
+    }
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    return irradiance;
+}
+
+Texture *generate_texture_prefilter(MemoryArena *arena, Texture *cubemap)
+{
+    s32 size = 256;
+
+    GLuint framebuffer, renderbuffer;
+    glGenFramebuffers(1, &framebuffer);
+    glGenRenderbuffers(1, &renderbuffer);
+    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+    glBindRenderbuffer(GL_RENDERBUFFER, renderbuffer);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, size, size);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, renderbuffer);
+
+    Texture *prefilter = push_struct(arena, Texture);
+    glGenTextures(1, &prefilter->id);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, prefilter->id);
+    for (u32 i = 0; i < 6; i++) {
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB16F, size, size, 0, GL_RGB, GL_FLOAT, NULL);
+    }
+
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+    glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
+
+    Matrix4x4 framebuffer_projection = mat4_perspective(to_radians(90.0f), 1.0, 0.1f, 100.0f);
+    Matrix4x4 framebuffer_view[6] = {
+        mat4_lookat(vec3(0.0f, 0.0f, 0.0f), vec3(1.0f, 0.0f, 0.0f), vec3(0.0f, -1.0f, 0.0f)),
+        mat4_lookat(vec3(0.0f, 0.0f, 0.0f), vec3(-1.0f, 0.0f, 0.0f), vec3(0.0f, -1.0f, 0.0f)),
+        mat4_lookat(vec3(0.0f, 0.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f), vec3(0.0f, 0.0f, 1.0f)),
+        mat4_lookat(vec3(0.0f, 0.0f, 0.0f), vec3(0.0f, -1.0f, 0.0f), vec3(0.0f, 0.0f, -1.0f)),
+        mat4_lookat(vec3(0.0f, 0.0f, 0.0f), vec3(0.0f, 0.0f, 1.0f), vec3(0.0f, -1.0f, 0.0f)),
+        mat4_lookat(vec3(0.0f, 0.0f, 0.0f), vec3(0.0f, 0.0f, -1.0f), vec3(0.0f, -1.0f, 0.0f))
+    };
+
+    Shader *shader = load_shader_from_file(arena, "../assets/shaders/prefilter_vertex.glsl", "../assets/shaders/prefilter_fragment.glsl");
+
+    glUseProgram(shader->id);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, cubemap->id);
+    set_uniform_mat4(shader->id, "projection", framebuffer_projection);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+
+    s32 MAX_MIPMAP_LEVELS = 5;
+
+    for (s32 mip = 0; mip < MAX_MIPMAP_LEVELS; mip++) {
+        u32 mip_width  = size*(s32)powf(0.5f, (f32)mip);
+        u32 mip_height = size*(s32)powf(0.5f, (f32)mip);
+
+        glBindRenderbuffer(GL_RENDERBUFFER, renderbuffer);
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, mip_width, mip_height);
+        glViewport(0, 0, mip_width, mip_height);
+
+        f32 roughness = (f32)mip/(f32)(MAX_MIPMAP_LEVELS - 1);
+        set_uniform_float(shader->id, "roughness", roughness);
+
+        for (s32 i = 0; i < 6; i++) {
+            set_uniform_mat4(shader->id, "view", framebuffer_view[i]);
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, prefilter->id, mip);
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            Mesh *cube = load_cube(arena);
+            glBindVertexArray(cube->vertex_array);
+            glDrawElements(GL_TRIANGLES, cube->num_indices, GL_UNSIGNED_INT, 0);
+        }
+    }
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    return prefilter;
+}
+
+Texture *generate_texture_brdf(MemoryArena *arena)
+{
+    s32 size = 512;
+
+    Texture *brdf = push_struct(arena, Texture);
+    glGenTextures(1, &brdf->id);
+    glBindTexture(GL_TEXTURE_2D, brdf->id);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, size, size, 0, GL_RGB, GL_FLOAT, NULL);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+    GLuint framebuffer, renderbuffer;
+    glGenFramebuffers(1, &framebuffer);
+    glGenRenderbuffers(1, &renderbuffer);
+    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+    glBindRenderbuffer(GL_RENDERBUFFER, renderbuffer);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, size, size);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, renderbuffer);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, brdf->id, 0);
+
+    Shader *shader = load_shader_from_file(arena, "../assets/shaders/brdf_vertex.glsl", "../assets/shaders/brdf_fragment.glsl");
+
+    glViewport(0, 0, size, size);
+    glUseProgram(shader->id);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    draw_quad();
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    return brdf;
+}
+
+void generate_enviroment_maps(MemoryArena *arena, const char *file_name, Texture *cubemap, Texture *irradiance, Texture *prefilter, Texture *brdf)
+{
+}
+
 

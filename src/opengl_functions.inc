@@ -20,6 +20,7 @@ GLProc(glFramebufferRenderbuffer, GLFRAMEBUFFERRENDERBUFFER);
 GLProc(glFramebufferTexture2D, GLFRAMEBUFFERTEXTURE2D);
 GLProc(glGenBuffers, GLGENBUFFERS);
 GLProc(glGenFramebuffers, GLGENFRAMEBUFFERS);
+GLProc(glGenerateMipmap, GLGENERATEMIPMAP)
 GLProc(glGenRenderbuffers, GLGENRENDERBUFFERS);
 GLProc(glGenVertexArrays, GLGENVERTEXARRAYS);
 GLProc(glGetProgramInfoLog, GLGETPROGRAMINFOLOG);

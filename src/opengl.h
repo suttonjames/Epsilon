@@ -35,5 +35,6 @@ void set_uniform_mat4(GLuint shader_id, const char *name, Matrix4x4 m);
 
 Texture *load_texture(MemoryArena *arena, const char *file_name);
 Texture *load_cubemap(MemoryArena *arena, const char *file_name);
+void generate_enviroment_maps(MemoryArena *arena, const char *file_name, Texture *cubemap, Texture *irradiance, Texture *prefilter, Texture *brdf);
 
 #endif /* OPENGL_H */
